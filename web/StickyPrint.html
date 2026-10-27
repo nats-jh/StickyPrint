@@ -343,6 +343,7 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   .tb-pop { position: relative; }
+  span.tb-pop { display: flex; }
   /* 상황별 옵션: 그리기 도구를 켰을 때, 사진을 골랐을 때만 나타난다 */
   .ctx { display: none; align-items: center; gap: 4px; margin-left: 4px; padding-left: 8px; border-left: 1px dashed #3a4048; }
   body.drawing #drawOpts, body.img-picked #imgOpts { display: flex; animation: ctx-in .16s ease-out; }
@@ -359,6 +360,18 @@
   .emoji.open { visibility: visible; opacity: 1; transform: none; }
   .toolbar .emoji button:hover:not(:disabled) { transform: scale(1.15); background: #353c44; }
   .toolbar .emoji button { min-width: 0; width: 32px; padding: 0; font-size: 16px; }
+  /* 표 크기 고르기 */
+  .tpick {
+    visibility: hidden; opacity: 0; transform: translateY(-4px) scale(.98); transform-origin: top left;
+    transition: opacity .14s, transform .14s, visibility .14s; position: absolute; top: 36px; left: 0; z-index: 10; padding: 10px;
+    background: #262b31; border: 1px solid #3a4048; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  .tpick.open { visibility: visible; opacity: 1; transform: none; }
+  .tp-grid { display: grid; grid-template-columns: repeat(6, 18px); gap: 3px; }
+  .tp-grid span { width: 18px; height: 18px; border: 1px solid #4a525c; border-radius: 3px; background: #2e343b; cursor: pointer; transition: background .08s, border-color .08s; }
+  .tp-grid span.on { background: #22344d; border-color: #4c9aff; }
+  .tp-size { margin-top: 8px; font-size: 12px; color: #b8c0c8; text-align: center; white-space: nowrap; }
+  body.in-table #tableOpts { display: flex; animation: ctx-in .16s ease-out; }
   .imgctl { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #b8c0c8; white-space: nowrap; }
   .imgctl input[type=range] { width: 90px; }
   .imgctl .val { width: 34px; text-align: right; }
@@ -441,6 +454,8 @@
   .paper .note { font-size: 8pt; line-height: 1.4; }
   .paper .blank { display: inline-block; min-width: 30mm; border-bottom: 0.2mm solid #000; color: #777; font-size: 8pt; }
   .paper hr { border: 0; border-top: 0.2mm solid #000; margin: 1.5mm 0; }
+  .paper table.tbl { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 1mm 0 2mm; }
+  .paper table.tbl td { border: 0.2mm solid #000; padding: 0.7mm 1.2mm; height: 5mm; vertical-align: top; line-height: 1.35; overflow-wrap: anywhere; }
   /* 템플릿용 모양: 줄 없이 예시 글을 바로 고쳐 쓰도록 */
   .paper .date { float: right; margin-top: 1mm; font-size: 8pt; color: #555; }
   .paper ul.check { list-style: none; margin: 0 0 2mm; padding: 0; }
@@ -531,7 +546,7 @@
         종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.</p>
 
       <div class="cards">
-        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 글자를 드래그한 뒤 누르세요.</p></div>
+        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 표, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 표 안에서는 Tab 으로 다음 칸으로 갑니다. 글자를 드래그한 뒤 누르세요.</p></div>
         <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다. 지우개는 도형을 클릭. Esc로 끝냅니다.</p></div>
         <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 고르고, 배경이나 앞에 띄운 사진은 끌어서 옮깁니다.</p></div>
         <div><h4>템플릿 저장</h4><p>고친 칸은 이름표에 노란 점이 생깁니다. 저장하면 그 템플릿에, 사본 저장은 새 템플릿으로 남습니다. 다른 PC로는 내보내기 → 가져오기.</p></div>
@@ -688,6 +703,17 @@
       <button data-cmd="bold" title="굵게 (Ctrl+B). 글자를 드래그한 뒤 누르세요"><b>B</b></button>
       <button data-cmd="underline" title="밑줄 (Ctrl+U). 글자를 드래그한 뒤 누르세요"><u>U</u></button>
       <button data-cmd="hr" title="구분선 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg></button>
+      <span class="tb-pop" id="tableTools">
+      <button id="tableToggle" title="표 넣기. 넣을 자리를 클릭한 뒤 누르세요"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 4.5v15M15 4.5v15"/></svg></button>
+      <div class="tpick" id="tablePick"></div>
+      </span>
+      <span class="ctx" id="tableOpts">
+      <button data-tbl="row" title="아래에 줄 추가 (마지막 칸에서 Tab 도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="8" rx="1.2"/><path d="M12 15v6M9 18h6"/></svg></button>
+      <button data-tbl="col" title="오른쪽에 칸 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="16" rx="1.2"/><path d="M15 12h6M18 9v6"/></svg></button>
+      <button data-tbl="delRow" title="이 줄 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="8" rx="1.2"/><path d="M10 16l4 4M14 16l-4 4"/></svg></button>
+      <button data-tbl="delCol" title="이 칸(세로줄) 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="16" rx="1.2"/><path d="M16 10l4 4M20 10l-4 4"/></svg></button>
+      <button data-tbl="delTable" title="표 통째로 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+      </span>
     </div>
     <div class="tb-group" title="정렬. 커서가 있는 줄에 적용됩니다">
       <button data-cmd="justifyLeft" class="align-btn" title="왼쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
@@ -1138,6 +1164,7 @@
     });
     document.querySelectorAll('.emoji button').forEach(b => { b.disabled = !tpl; });
     document.getElementById('emojiToggle').disabled = !tpl;
+    document.getElementById('tableToggle').disabled = !tpl;
     ['fontDown', 'fontUp', 'fontSize', 'fontFamily'].forEach(id => { document.getElementById(id).disabled = !tpl; });
     const markSwatches = (box, cur) => {
       const known = PAPER_COLORS.some(pc => pc.c === cur);
@@ -1316,6 +1343,7 @@
   }
 
   function onKey(e, i) {
+    if (e.key === 'Tab' && cellAtCaret()) { e.preventDefault(); tabCell(e.shiftKey); return; }
     if (!(e.ctrlKey || e.metaKey)) return;
     const k = e.key.toLowerCase();
     if (k === 'z' && !e.shiftKey) { e.preventDefault(); stepHistory(i, true); }
@@ -1976,6 +2004,124 @@
   document.addEventListener('mousedown', e => {
     if (!e.target.closest('.tb-pop')) emojiBox.classList.remove('open');
   });
+
+  // ---------- 표 ----------
+  // 칸 수를 고르면 커서 자리에 넣는다. 표 안에 커서가 있으면 줄과 칸을 늘리고 줄이는 버튼이 나온다
+  const TABLE_MAX = 6;
+  const tableBox = document.getElementById('tablePick');
+  let tableGrid = '';
+  for (let r = 1; r <= TABLE_MAX; r++) for (let c = 1; c <= TABLE_MAX; c++) tableGrid += '<span data-r="' + r + '" data-c="' + c + '"></span>';
+  tableBox.innerHTML = '<div class="tp-grid">' + tableGrid + '</div><div class="tp-size">표 크기를 고르세요</div>';
+  const tableSizeText = tableBox.querySelector('.tp-size');
+  tableBox.addEventListener('mousedown', e => e.preventDefault());
+  tableBox.addEventListener('mouseover', e => {
+    const t = e.target.closest('[data-r]');
+    if (!t) return;
+    const R = +t.dataset.r, C = +t.dataset.c;
+    tableBox.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= R && +x.dataset.c <= C));
+    tableSizeText.textContent = C + '칸 × ' + R + '줄';
+  });
+  tableBox.addEventListener('click', e => {
+    const t = e.target.closest('[data-r]');
+    if (t) insertTable(+t.dataset.r, +t.dataset.c);
+  });
+  const tableToggle = document.getElementById('tableToggle');
+  tableToggle.addEventListener('mousedown', e => e.preventDefault());
+  tableToggle.addEventListener('click', () => tableBox.classList.toggle('open'));
+  document.addEventListener('mousedown', e => {
+    if (!e.target.closest('#tableTools')) tableBox.classList.remove('open');
+  });
+
+  function insertTable(rows, cols) {
+    tableBox.classList.remove('open');
+    if (!caretInSelectedPaper()) { flash('포스트잇 안 넣을 자리를 먼저 클릭하세요'); return; }
+    const row = '<tr>' + '<td><br></td>'.repeat(cols) + '</tr>';
+    suppressInput = true;
+    document.execCommand('insertHTML', false, '<table class="tbl" data-new="1"><tbody>' + row.repeat(rows) + '</tbody></table><div><br></div>');
+    suppressInput = false;
+    const table = paperOf(sel).querySelector('table[data-new]');
+    if (table) { table.removeAttribute('data-new'); caretInto(table.rows[0].cells[0]); }
+    onEdit(sel, getHtml(sel), false);
+  }
+
+  // 커서가 있는 표 칸 (선택한 칸 안일 때만)
+  function cellAtCaret() {
+    const node = window.getSelection().anchorNode;
+    const el = node && (node.nodeType === 1 ? node : node.parentElement);
+    const td = el && el.closest('td');
+    const paper = paperOf(sel);
+    return td && paper && paper.contains(td) && td.closest('table.tbl') ? td : null;
+  }
+
+  function caretInto(td) {
+    paperOf(sel).focus();
+    const r = document.createRange();
+    r.selectNodeContents(td);
+    r.collapse(false);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
+  const emptyCell = () => { const td = document.createElement('td'); td.innerHTML = '<br>'; return td; };
+  function addRow(td) {
+    const tr = td.parentElement;
+    const nr = document.createElement('tr');
+    for (let k = 0; k < tr.cells.length; k++) nr.appendChild(emptyCell());
+    tr.after(nr);
+    return nr.cells[td.cellIndex];
+  }
+  // 표 동작: 바꾼 뒤 하나의 되돌리기 단계로 남긴다. 마지막 줄이나 칸을 지우면 표가 없어진다
+  const TABLE_OPS = {
+    row: addRow,
+    col: td => {
+      const k = td.cellIndex;
+      Array.from(td.closest('table').rows).forEach(tr => tr.cells[k].after(emptyCell()));
+      return td.parentElement.cells[k + 1];
+    },
+    delRow: td => {
+      const tr = td.parentElement, table = tr.closest('table');
+      if (table.rows.length === 1) return TABLE_OPS.delTable(td);
+      const near = tr.nextElementSibling || tr.previousElementSibling;
+      tr.remove();
+      return near.cells[Math.min(td.cellIndex, near.cells.length - 1)];
+    },
+    delCol: td => {
+      const k = td.cellIndex, tr = td.parentElement, table = tr.closest('table');
+      if (tr.cells.length === 1) return TABLE_OPS.delTable(td);
+      Array.from(table.rows).forEach(r => r.cells[k].remove());
+      return tr.cells[Math.min(k, tr.cells.length - 1)];
+    },
+    delTable: td => { td.closest('table').remove(); return null; }
+  };
+  function tableOp(name) {
+    const td = cellAtCaret();
+    if (!td) return;
+    const next = TABLE_OPS[name](td);
+    onEdit(sel, getHtml(sel), false);
+    if (next) caretInto(next); else paperOf(sel).focus();
+    syncTableCtx();
+  }
+  document.querySelectorAll('#tableOpts button').forEach(b => {
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => tableOp(b.dataset.tbl));
+  });
+
+  // Tab: 다음 칸, Shift+Tab: 앞 칸. 마지막 칸에서 Tab 을 누르면 줄이 하나 늘어난다
+  function tabCell(back) {
+    const td = cellAtCaret();
+    const cells = Array.from(td.closest('table').querySelectorAll('td'));
+    const k = cells.indexOf(td) + (back ? -1 : 1);
+    if (k >= 0 && k < cells.length) { caretInto(cells[k]); return; }
+    if (back) return;
+    const tr = td.parentElement;
+    const first = addRow(tr.cells[0]);
+    onEdit(sel, getHtml(sel), false);
+    caretInto(first);
+  }
+
+  function syncTableCtx() { document.body.classList.toggle('in-table', !!cellAtCaret()); }
+  document.addEventListener('selectionchange', syncTableCtx);
 
   const imgFile = document.getElementById('imgFile');
   let caretBeforePick = null;   // 파일 창이 열리면 커서가 사라지므로 미리 기억
