@@ -23,6 +23,7 @@ SOFTWARE.
 ---
 
 The MIT License above applies to the source code only.
-Images in this repository (web/data/*.png, web/data/deco/, app-icon.png, src-tauri/icons/) are
+Images in this repository (web/data/*.png, web/data/deco/, app-icon.png, src-tauri/icons/,
+src-tauri/installer/) are
 © 2026 kangjoonhyuk, All rights reserved, and are NOT licensed under MIT.
 They may not be reused, modified, or redistributed outside of StickyPrint.

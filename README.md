@@ -89,5 +89,5 @@ npm run dev
 - **코드**: [MIT](LICENSE) © 2026 kangjoonhyuk
 - **글꼴** (`web/data/fonts/`): 프리텐다드, 나눔고딕, 나눔손글씨 펜, 개구, 감자꽃, 주아. 모두 SIL Open Font License 1.1 (각 폴더의 LICENSE.txt)
 - **이미지 (로고, 이름 이미지, 아이콘, 꾸미기 그림)**: MIT 대상이 아닙니다. © 2026 kangjoonhyuk, All rights reserved.
-  `web/data/*.png`, `web/data/deco/`, `app-icon.png`, `src-tauri/icons/` 는 이 프로그램을 빌드하고 배포하는 용도로만 들어 있으며,
+  `web/data/*.png`, `web/data/deco/`, `app-icon.png`, `src-tauri/icons/`, `src-tauri/installer/` 의 그림은 이 프로그램을 빌드하고 배포하는 용도로만 들어 있으며,
   다른 프로그램이나 목적에 쓰거나 고쳐 쓸 수 없습니다. 이 저장소를 바탕으로 다른 것을 만든다면 이미지는 직접 만들어 바꿔 주세요.
