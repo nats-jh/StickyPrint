@@ -6,7 +6,7 @@ A4 용지에 포스트잇을 붙여 프린터로 포스트잇에 바로 인쇄�
 
 [Releases](https://github.com/nats-jh/StickyPrint/releases/latest)에서 `StickyPrint_x.y.z_x64-setup.exe`를 받아 실행한다.
 
-- Windows 10·11 (64비트), 관리자 권한 필요 없음
+- Windows 10, 11 (64비트), 관리자 권한 필요 없음
 - 코드 서명을 하지 않아서 처음 실행 때 "Windows의 PC 보호"가 뜨면 **추가 정보 → 실행**
 - 설치 후에는 켤 때마다 새 버전을 확인해 알려 준다. 인터넷이 없어도 사용에는 지장이 없다.
 
@@ -15,6 +15,8 @@ A4 용지에 포스트잇을 붙여 프린터로 포스트잇에 바로 인쇄�
 1. **테두리 인쇄**: 빈 A4에 포스트잇 붙일 자리를 점선으로 찍는다
 2. 점선에 맞춰 포스트잇을 붙인다
 3. 같은 방향으로 다시 넣고 **내용 인쇄**
+
+인쇄 버튼을 누르면 프린터만 고르면 된다. A4, 배율 100%, 여백 없음은 프로그램이 맞춘다. 창의 X를 누르면 바로 꺼지지 않고 한 번 묻는다.
 
 테두리를 찍은 A4는 재활용하면 된다. 자세한 사용법은 프로그램 왼쪽 위 **사용법** 버튼.
 
@@ -30,7 +32,7 @@ A4 용지에 포스트잇을 붙여 프린터로 포스트잇에 바로 인쇄�
 | `scripts/build-dist.mjs` | `web/` → `dist/` (index.html, 템플릿을 `templates.js` 로) |
 | `scripts/tauri-build.mjs` | 서명 키를 넣고 `tauri build` |
 | `scripts/release.mjs` | 빌드 → `latest.json` → GitHub Release 업로드 |
-| `src-tauri/` | Tauri(Rust) 껍데기, 파일 백업·자동 업데이트 |
+| `src-tauri/` | Tauri(Rust) 껍데기, 파일 백업, 자동 업데이트 |
 
 ## 빌드 (만드는 PC에만 필요)
 
@@ -54,7 +56,7 @@ npm run build
 앱은 `https://github.com/nats-jh/StickyPrint/releases/latest/download/latest.json` 을 본다.
 다운로드 횟수: `gh release view vX.Y.Z --json assets -q '.assets[]|.name+" "+(.downloadCount|tostring)'`
 
-### 설정·템플릿이 유지되는 이유와 지켜야 할 것
+### 설정과 템플릿이 유지되는 이유와 지켜야 할 것
 
 - 앱 데이터는 프로그램 폴더가 아니라 사용자 폴더에 있다
   - 화면 저장소: `%LOCALAPPDATA%\com.kangjoonhyuk.stickyprint\EBWebView`
@@ -76,5 +78,5 @@ npm run dev
 - **코드**: [MIT](LICENSE) © 2026 kangjoonhyuk
 - **글꼴** (`web/data/fonts/`): 프리텐다드, 나눔고딕, 나눔손글씨 펜, 개구, 감자꽃, 주아. 모두 SIL Open Font License 1.1 (각 폴더의 LICENSE.txt)
 - **이미지 (로고, 이름 이미지, 아이콘)**: MIT 대상이 아닙니다. © 2026 kangjoonhyuk, All rights reserved.
-  `web/data/*.png`, `app-icon.png`, `src-tauri/icons/` 는 이 프로그램을 빌드·배포하는 용도로만 들어 있으며,
+  `web/data/*.png`, `app-icon.png`, `src-tauri/icons/` 는 이 프로그램을 빌드하고 배포하는 용도로만 들어 있으며,
   다른 프로그램이나 목적에 쓰거나 고쳐 쓸 수 없습니다. 이 저장소를 바탕으로 다른 것을 만든다면 이미지는 직접 만들어 바꿔 주세요.

@@ -75,6 +75,36 @@
     transform: translateY(8px) scale(.985); transition: transform .2s;
   }
   .modal.open .modal-card { transform: none; }
+  /* ---------- 인쇄 창, 끄기 확인 ---------- */
+  .modal.small .modal-card { width: min(440px, calc(100vw - 48px)); padding: 22px 22px 18px; }
+  .pd-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .pd-icon { width: 40px; height: 40px; flex: none; border-radius: 10px; display: grid; place-items: center; background: rgba(245, 200, 66, .12); color: #f5c842; }
+  .pd-icon svg { width: 22px; height: 22px; }
+  .pd-head h3 { margin: 0; font-size: 17px; }
+  .pd-head p { margin: 2px 0 0; font-size: 12.5px; color: #9aa4af; }
+  .pd-body { display: flex; gap: 16px; align-items: center; padding: 14px; border-radius: 12px; background: #262b31; border: 1px solid #333a42; }
+  .pd-guide { width: 92px; flex: none; }
+  .pd-notes rect { fill: #f5c842; }
+  #printDlg.frame .pd-notes { display: none; }
+  #printDlg.content .pd-dash { display: none; }
+  .pd-steps { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: #c3cad2; }
+  .pd-steps b { color: #fff; }
+  .pd-field { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 12px; color: #9aa4af; }
+  .pd-field select { padding: 9px 10px; border-radius: 8px; background: #14171a; color: #fff; border: 1px solid #3a4048; font: 13.5px inherit; }
+  .pd-msg { min-height: 18px; margin: 8px 0 0; font-size: 12.5px; color: #ff9b9b; }
+  .pd-msg button { margin-left: 6px; padding: 0; border: 0; background: none; color: #8fbaff; font: inherit; text-decoration: underline; cursor: pointer; }
+  .pd-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+  .pd-acts button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 96px; padding: 11px 18px; border-radius: 9px; font: 600 14px/1 inherit; cursor: pointer; }
+  .pd-cancel { background: #2b3138; color: #e6e6e6; border: 1px solid #3a4048; }
+  .pd-cancel:hover { background: #353c44; }
+  .pd-go { background: #2a5aa0; color: #fff; border: 1px solid #4c9aff; }
+  .pd-go:hover { background: #326bbd; }
+  .pd-go:disabled { opacity: .6; cursor: default; }
+  .pd-go svg { width: 17px; height: 17px; }
+  .pd-go.quit { background: #8f2f2f; border-color: #c25050; }
+  .pd-go.quit:hover { background: #a53737; }
+  .quit-card h3 { margin: 0 0 6px; font-size: 17px; }
+  .quit-card p { margin: 0 0 8px; font-size: 13px; color: #aab3bd; }
   .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 2px; }
   .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
   .modal-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; cursor: pointer; display: grid; place-items: center; }
@@ -497,7 +527,7 @@
         <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
         <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다. 템플릿이 있는 칸만 찍힙니다.</span></li>
       </ol>
-      <p class="note-box">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.
+      <p class="note-box" id="printNote">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.
         종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.</p>
 
       <div class="cards">
@@ -520,6 +550,55 @@
         <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
       </div>
       <p class="help-foot">새 버전은 켤 때와 켜 둔 동안 6시간마다 자동으로 확인합니다. 왼쪽 아래 "업데이트 확인"으로 바로 확인할 수도 있습니다.</p>
+    </div>
+  </div>
+</div>
+<div id="printDlg" class="modal small" aria-hidden="true">
+  <div class="modal-card print-card" role="dialog" aria-labelledby="pdTitle">
+    <div class="pd-head">
+      <span class="pd-icon" id="pdIcon"></span>
+      <div>
+        <h3 id="pdTitle">테두리 인쇄</h3>
+        <p id="pdSub">포스트잇 붙일 자리를 점선으로 찍습니다</p>
+      </div>
+    </div>
+    <div class="pd-body">
+      <svg class="pd-guide" viewBox="0 0 120 150" aria-hidden="true">
+        <rect x="22" y="22" width="76" height="108" rx="3" fill="#fff" stroke="#c9d1da" stroke-width="1.5"/>
+        <g class="pd-notes">
+          <rect x="32" y="34" width="25" height="25" rx="1.5"/><rect x="63" y="34" width="25" height="25" rx="1.5"/>
+          <rect x="32" y="65" width="25" height="25" rx="1.5"/><rect x="63" y="65" width="25" height="25" rx="1.5"/>
+          <rect x="32" y="96" width="25" height="25" rx="1.5"/><rect x="63" y="96" width="25" height="25" rx="1.5"/>
+        </g>
+        <g class="pd-dash" fill="none" stroke="#8b95a1" stroke-width="1" stroke-dasharray="2.5 2">
+          <rect x="32" y="34" width="25" height="25"/><rect x="63" y="34" width="25" height="25"/>
+          <rect x="32" y="65" width="25" height="25"/><rect x="63" y="65" width="25" height="25"/>
+          <rect x="32" y="96" width="25" height="25"/><rect x="63" y="96" width="25" height="25"/>
+        </g>
+        <g fill="none" stroke="#4c9aff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M60 16V3"/><path d="M53 9.5L60 3l7 6.5"/>
+        </g>
+      </svg>
+      <ol class="pd-steps" id="pdSteps"></ol>
+    </div>
+    <label class="pd-field">
+      <span>프린터</span>
+      <select id="pdPrinter"></select>
+    </label>
+    <p class="pd-msg" id="pdMsg"></p>
+    <div class="pd-acts">
+      <button class="pd-cancel" id="pdCancel">취소</button>
+      <button class="pd-go" id="pdGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6H7z"/><path d="M17 12h.01"/></svg><span>인쇄</span></button>
+    </div>
+  </div>
+</div>
+<div id="quitDlg" class="modal small" aria-hidden="true">
+  <div class="modal-card quit-card" role="dialog" aria-labelledby="qdTitle">
+    <h3 id="qdTitle">StickyPrint를 끌까요?</h3>
+    <p>고친 내용과 설정은 자동으로 저장되어 있어요.</p>
+    <div class="pd-acts">
+      <button class="pd-cancel" id="qdCancel">취소</button>
+      <button class="pd-go quit" id="qdGo">끄기</button>
     </div>
   </div>
 </div>
@@ -1962,11 +2041,125 @@
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
       setMode(mode);
-      if (mode !== 'preview') window.print();
+      if (mode === 'preview') return;
+      if (window.__TAURI__ && window.__TAURI__.core) openPrintDialog(mode);
+      else window.print();
     });
   });
   // 인쇄 창을 닫으면(인쇄든 취소든) 미리보기로 돌아온다
   window.addEventListener('afterprint', () => setMode('preview'));
+
+  // ---------- 우리 인쇄 창 (설치 프로그램) ----------
+  // 프린터만 고르면 된다. A4, 배율 100%, 여백 없음, 머리글 없음은 앱이 고정한다.
+  const printDlg = document.getElementById('printDlg');
+  const PRINT_TEXT = {
+    frame: {
+      title: '테두리 인쇄', sub: '포스트잇 붙일 자리를 점선으로 찍습니다', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.6"/></svg>',
+      steps: ['<b>빈 A4 용지</b>를 넣으세요', '찍힌 점선에 맞춰 포스트잇을 붙이세요', '이 종이는 계속 재활용할 수 있어요']
+    },
+    content: {
+      title: '내용 인쇄', sub: '붙인 포스트잇에 내용을 찍습니다', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6H7z"/><path d="M17 12h.01"/></svg>',
+      steps: ['포스트잇 붙인 면이 <b>위로</b> 오게', '접착된 <b>윗부분이 프린터 안쪽</b>으로 들어가게', '테두리 인쇄 때와 같은 방향으로 넣으세요']
+    }
+  };
+  let printMode = 'frame', printers = null;
+
+  async function openPrintDialog(mode) {
+    printMode = mode;
+    const t = PRINT_TEXT[mode];
+    printDlg.classList.remove('frame', 'content');
+    printDlg.classList.add(mode);
+    document.getElementById('pdTitle').textContent = t.title;
+    document.getElementById('pdSub').textContent = t.sub;
+    document.getElementById('pdIcon').innerHTML = t.icon;
+    document.getElementById('pdSteps').innerHTML = t.steps.map(x => '<li>' + x + '</li>').join('');
+    document.getElementById('pdMsg').textContent = '';
+    const go = document.getElementById('pdGo');
+    go.disabled = false;
+    go.querySelector('span').textContent = '인쇄';
+    printDlg.classList.add('open');
+    printDlg.setAttribute('aria-hidden', 'false');
+    const sel = document.getElementById('pdPrinter');
+    if (!printers) {
+      sel.innerHTML = '<option>프린터를 찾는 중…</option>';
+      try { printers = await window.__TAURI__.core.invoke('list_printers'); } catch (e) { printers = { names: [], default: null }; }
+    }
+    const names = printers.names || [];
+    if (!names.length) {
+      sel.innerHTML = '<option>설치된 프린터가 없습니다</option>';
+      go.disabled = true;
+      showPrintFallback('프린터를 찾지 못했습니다.');
+      return;
+    }
+    const remembered = state.printer && names.includes(state.printer) ? state.printer : printers.default;
+    sel.innerHTML = names.map(n => '<option></option>').join('');
+    [...sel.options].forEach((o, i) => { o.value = names[i]; o.textContent = names[i] + (names[i] === printers.default ? '  (기본)' : ''); });
+    sel.value = remembered && names.includes(remembered) ? remembered : names[0];
+    go.focus();
+  }
+
+  function closePrintDialog() {
+    printDlg.classList.remove('open');
+    printDlg.setAttribute('aria-hidden', 'true');
+    setMode('preview');
+  }
+
+  // 바로 인쇄가 안 되면 기본 인쇄 창으로도 할 수 있게
+  function showPrintFallback(text) {
+    const msg = document.getElementById('pdMsg');
+    msg.textContent = text;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '기본 인쇄 창으로 열기';
+    b.addEventListener('click', () => {
+      const mode = printMode;
+      printDlg.classList.remove('open');
+      setMode(mode);
+      window.print();
+    });
+    msg.appendChild(b);
+  }
+
+  async function doPrint() {
+    const go = document.getElementById('pdGo');
+    const printer = document.getElementById('pdPrinter').value;
+    if (!printer || go.disabled) return;
+    go.disabled = true;
+    go.querySelector('span').textContent = '보내는 중…';
+    document.getElementById('pdMsg').textContent = '';
+    state = { ...state, printer: printer };
+    saveState();
+    try {
+      setMode(printMode);   // 찍을 모습(점선만, 내용만)으로 바꾼 뒤 보낸다
+      await window.__TAURI__.core.invoke('print_page', { printer: printer });
+      closePrintDialog();
+      flash(PRINT_TEXT[printMode].title + '를 프린터로 보냈습니다');
+    } catch (e) {
+      go.disabled = false;
+      go.querySelector('span').textContent = '다시 인쇄';
+      showPrintFallback(String(e));
+    }
+  }
+  document.getElementById('pdGo').addEventListener('click', doPrint);
+  document.getElementById('pdCancel').addEventListener('click', closePrintDialog);
+  printDlg.addEventListener('mousedown', e => { if (e.target === printDlg && !document.getElementById('pdGo').disabled) closePrintDialog(); });
+
+  // ---------- 창 X: 끌지 한 번 묻는다 ----------
+  const quitDlg = document.getElementById('quitDlg');
+  const closeQuit = () => { quitDlg.classList.remove('open'); quitDlg.setAttribute('aria-hidden', 'true'); };
+  document.getElementById('qdCancel').addEventListener('click', closeQuit);
+  quitDlg.addEventListener('mousedown', e => { if (e.target === quitDlg) closeQuit(); });
+  document.getElementById('qdGo').addEventListener('click', async () => {
+    await writeBackup();
+    window.__TAURI__.core.invoke('quit_app');
+  });
+  if (window.__TAURI__ && window.__TAURI__.event) {
+    window.__TAURI__.event.listen('close-requested', () => {
+      quitDlg.classList.add('open');
+      quitDlg.setAttribute('aria-hidden', 'false');
+      document.getElementById('qdCancel').focus();
+    });
+  }
 
   render();
 
@@ -1986,6 +2179,8 @@
       e.preventDefault();   // 브라우저의 "페이지 저장" 대신 템플릿 저장
       if (slotTpl(sel)) actSave();
     } else if (e.key === 'Escape') {
+      if (quitDlg.classList.contains('open')) { closeQuit(); return; }
+      if (printDlg.classList.contains('open')) { if (!document.getElementById('pdGo').disabled) closePrintDialog(); return; }
       if (helpModal.classList.contains('open')) { closeHelp(); return; }
       if (document.querySelector('.tpl-menu')) { closeTplMenu(); return; }
       emojiBox.classList.remove('open');
@@ -1995,6 +2190,11 @@
   });
 
   // 설치 프로그램이면 버전 표시 (업데이트가 됐는지 확인용)
+  // 설치 프로그램은 배율, 여백을 앱이 맞추므로 프린터만 고르면 된다
+  if (window.__TAURI__ && window.__TAURI__.core) {
+    document.getElementById('printNote').innerHTML = '인쇄 버튼을 누르면 <b>프린터만 고르면</b> 됩니다. 배율, 여백은 앱이 알아서 맞춥니다. '
+      + '종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.';
+  }
   if (window.__TAURI__ && window.__TAURI__.app) {
     window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' v' + v; }).catch(() => {});
   }

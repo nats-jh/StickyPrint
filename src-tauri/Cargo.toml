@@ -26,3 +26,8 @@ tauri-plugin-log = "2"
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2"
+
+# 인쇄 창 없이 바로 인쇄, 프린터 목록 (tauri 가 쓰는 것과 같은 버전)
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.39"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Printing"] }
