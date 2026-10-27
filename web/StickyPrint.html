@@ -105,6 +105,79 @@
   .pd-go.quit:hover { background: #a53737; }
   .quit-card h3 { margin: 0 0 6px; font-size: 17px; }
   .quit-card p { margin: 0 0 8px; font-size: 13px; color: #aab3bd; }
+  /* ---------- 실제 크기로 대 보기 ---------- */
+  #measureDlg { --paper-tex: url(data/paper_texture.png); }   /* 종이 결: ChatGPT 로 만든 이어 붙일 수 있는 그림 */
+  .ms-card { width: min(1240px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 20px 22px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .ms-top { display: flex; align-items: flex-start; gap: 12px; }
+  .ms-top h3 { margin: 0; font-size: 17px; }
+  .ms-top p { margin: 3px 0 0; font-size: 12.5px; color: #9aa4af; line-height: 1.55; }
+  .ms-top .modal-x { margin-left: auto; flex: none; }
+  .ms-stage {
+    position: relative; flex: 1; min-height: 340px; border-radius: 12px; overflow: auto; display: grid; place-items: center; padding: 40px;
+    background-color: #2a2f35; border: 1px solid #333a42;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  }
+  .ms-hint { position: absolute; left: 14px; top: 10px; font-size: 11.5px; color: #7f8a96; }
+  .ms-hint #msSource:empty + span { margin-left: -4px; }
+  /* 크기별 실물 포스트잇을 늘어놓는다 */
+  .ms-gallery { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 34px 30px; }
+  .ms-item { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0; border: 0; background: none; color: #cfd6dd; font-family: inherit; cursor: pointer; }
+  .ms-item .ms-paper { position: relative; isolation: isolate; transition: transform .15s; }
+  .ms-item:hover .ms-paper { transform: translateY(-3px); }
+  .ms-item .cap { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 13px; font-weight: 700; }
+  .ms-item .cap small { font-size: 11px; font-weight: 500; color: #8b95a1; }
+  .ms-item.on .ms-paper { outline: 3px solid #4c9aff; outline-offset: 4px; }
+  .ms-item.on .cap { color: #8fbaff; }
+  .ms-item.on .ms-paper::before { content: ''; position: absolute; z-index: 2; right: -12px; top: -12px; width: 24px; height: 24px; border-radius: 50%; background: #4c9aff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 15px no-repeat; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  .ms-item.cur .cap::after { content: '지금 쓰는 크기'; margin-top: 3px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; color: #e8dcae; background: rgba(245,200,66,.12); border: 1px solid rgba(245,200,66,.3); }
+  .ms-obj { position: relative; isolation: isolate; }
+  /* 진짜 포스트잇처럼: 종이 결, 위쪽 접착 띠, 오른쪽 아래가 살짝 들린 그림자 */
+  .ms-note {
+    position: absolute; inset: 0; border-radius: 1px; background-color: var(--note, #FFF3A0);
+    background-image: var(--paper-tex, none), linear-gradient(180deg, rgba(120, 90, 0, .07) 0, rgba(120, 90, 0, 0) 17%), linear-gradient(160deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%);
+    background-size: 240px 240px, auto, auto; background-blend-mode: multiply, normal, normal;
+    box-shadow: 0 1px 1px rgba(0,0,0,.12), 0 6px 14px rgba(0,0,0,.22);
+  }
+  .ms-paper::after, .ms-obj.note::after {
+    content: ''; position: absolute; z-index: -1; right: 6%; bottom: 7px; width: 46%; height: 18px;
+    box-shadow: 0 12px 12px rgba(0,0,0,.38); transform: rotate(3deg); transform-origin: right bottom;
+  }
+  .ms-card-shape {
+    position: absolute; inset: 0; border-radius: var(--r, 12px); overflow: hidden;
+    background: linear-gradient(135deg, #3f5f8f, #22385a 60%, #1b2c47); box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .ms-card-shape .chip { position: absolute; left: 11%; top: 34%; width: 14%; height: 19%; border-radius: 12%; background: linear-gradient(135deg, #e9d18a, #b8964a); }
+  .ms-card-shape .ln { position: absolute; left: 11%; height: 5%; border-radius: 3px; background: rgba(255,255,255,.28); }
+  .ms-dim { position: absolute; color: #cfd6dd; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+  .ms-dim.w { left: 0; right: 0; top: -24px; text-align: center; }
+  .ms-dim.h { top: 0; bottom: 0; left: calc(100% + 12px); display: flex; align-items: center; }
+  .ms-dim.w::before, .ms-dim.w::after { content: ''; position: absolute; top: 8px; width: calc(50% - 36px); border-top: 1px solid #5d6772; }
+  .ms-dim.w::before { left: 0; } .ms-dim.w::after { right: 0; }
+  .ms-grip { position: absolute; z-index: 2; background: #4c9aff; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); touch-action: none; }
+  .ms-grip.r { right: -7px; top: 50%; width: 10px; height: 34px; margin-top: -17px; border-radius: 6px; cursor: ew-resize; }
+  .ms-grip.b { bottom: -7px; left: 50%; width: 34px; height: 10px; margin-left: -17px; border-radius: 6px; cursor: ns-resize; }
+  .ms-grip.c { right: -9px; bottom: -9px; width: 18px; height: 18px; border-radius: 50%; cursor: nwse-resize; }
+  .ms-grip:hover { background: #6aadff; }
+  .ms-match { position: absolute; right: 12px; top: 10px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #22344d; color: #cfe2ff; border: 1px solid #4c9aff; white-space: nowrap; }
+  .ms-match[hidden] { display: none; }
+  .ms-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ms-num { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9aa4af; }
+  .ms-num input { width: 64px; padding: 6px 8px; border-radius: 7px; background: #14171a; color: #fff; border: 1px solid #3a4048; font: inherit; font-size: 13px; }
+  .ms-scale { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #9aa4af; }
+  .ms-scale input[type=range] { flex: 1; }
+  .ms-step { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #3a4048; background: #2b3138; color: #fff; font-size: 16px; cursor: pointer; }
+  .ms-step:hover { background: #353c44; }
+  .ms-foot { display: flex; align-items: center; gap: 14px; }
+  .ms-foot .link { padding: 0; border: 0; background: none; color: #8fbaff; font-size: 12.5px; font-family: inherit; cursor: pointer; }
+  .ms-foot .link:hover { text-decoration: underline; }
+  .ms-foot .pd-acts { margin: 0 0 0 auto; }
+  /* 단계: screen(화면 맞추기) / note(늘어놓고 고르기) / custom(직접 맞추기) */
+  #measureDlg[data-step="screen"] :is(.only-note, .only-custom, .note-or-custom),
+  #measureDlg[data-step="note"] :is(.only-screen, .only-custom, .screen-or-custom),
+  #measureDlg[data-step="custom"] :is(.only-screen, .only-note) { display: none !important; }
+  .measure-btn { width: 100%; margin: 0 0 8px; padding: 8px 10px; border-radius: 7px; border: 1px dashed #4c9aff; background: rgba(76,154,255,.08); color: #cfe2ff; font-size: 12.5px; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .measure-btn:hover { background: rgba(76,154,255,.16); color: #fff; }
+  .measure-btn svg { width: 15px; height: 15px; }
   .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 2px; }
   .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
   .modal-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; cursor: pointer; display: grid; place-items: center; }
@@ -572,7 +645,7 @@
         <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 고르고, 배경이나 앞에 띄운 사진은 끌어서 옮깁니다.</p></div>
         <div><h4>템플릿 저장</h4><p>고친 칸은 이름표에 노란 점이 생깁니다. 저장하면 그 템플릿에, 사본 저장은 새 템플릿으로 남습니다. 다른 PC로는 내보내기 → 가져오기.</p></div>
         <div><h4>되돌리기</h4><p>칸을 클릭한 뒤 Ctrl+Z는 그 칸만 되돌립니다(그리기 포함). 칸 바깥을 클릭해 선택을 풀면 가장 최근에 바뀐 칸부터 되돌립니다.</p></div>
-        <div><h4>보기와 크기</h4><p>미리보기 아래에서 포스트잇 색을 깔아 볼 수 있습니다(인쇄 안 됨). 화면 크기는 오른쪽 아래 버튼이나 Ctrl+휠, 포스트잇 크기는 왼쪽 아래 "크기와 위치"에서.</p></div>
+        <div><h4>보기와 크기</h4><p>미리보기 아래에서 포스트잇 색을 깔아 볼 수 있습니다(인쇄 안 됨). 화면 크기는 오른쪽 아래 버튼이나 Ctrl+휠, 포스트잇 크기는 왼쪽 아래 "크기와 위치"에서 고르고, "포스트잇을 화면에 대 보고 고르기"로 실물을 모니터에 대 보며 맞출 수도 있습니다.</p></div>
       </div>
 
       <h4>단축키</h4>
@@ -625,6 +698,54 @@
     <div class="pd-acts">
       <button class="pd-cancel" id="pdCancel">취소</button>
       <button class="pd-go" id="pdGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6H7z"/><path d="M17 12h.01"/></svg><span>인쇄</span></button>
+    </div>
+  </div>
+</div>
+<div id="measureDlg" class="modal" aria-hidden="true" data-step="note">
+  <div class="modal-card ms-card" role="dialog" aria-labelledby="msTitle">
+    <div class="ms-top">
+      <div class="pd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5L15.5 3l5.5 5.5L8.5 21z"/><path d="M7 11.5l2 2M10 8.5l2 2M13 5.5l2 2"/></svg></div>
+      <div>
+        <h3 id="msTitle"><span class="only-note">포스트잇을 화면에 대 보고 고르기</span><span class="only-custom">직접 맞추기</span><span class="only-screen">화면 크기 맞추기 (처음 한 번)</span></h3>
+        <p class="only-note">아래 종이들은 실제 크기입니다. 가진 포스트잇을 하나씩 대 보고 딱 맞는 것을 누른 뒤 "이 크기로 쓰기".</p>
+        <p class="only-custom">맞는 크기가 없으면 포스트잇을 화면의 종이에 대고, 파란 손잡이를 끌어 실물과 똑같이 맞추세요.</p>
+        <p class="only-screen">모니터마다 1mm 가 다르게 보여서 한 번 맞춰야 합니다. 신용카드나 신분증(모두 같은 크기)을 화면의 카드 위에 대고, 손잡이나 막대로 크기를 똑같이 맞추세요.</p>
+      </div>
+      <button class="modal-x" id="msClose" title="닫기 (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="ms-stage" id="msStage">
+      <span class="ms-hint note-or-custom"><span id="msSource"></span><span class="only-custom"> 격자 한 칸 = 실제 1cm</span></span>
+      <div class="ms-gallery only-note" id="msGallery"></div>
+      <div class="ms-obj screen-or-custom" id="msObj">
+        <div class="ms-note only-custom"></div>
+        <div class="ms-card-shape only-screen"><span class="chip"></span><span class="ln" style="top:66%;width:58%"></span><span class="ln" style="top:76%;width:34%"></span></div>
+        <span class="ms-dim w" id="msDimW"></span><span class="ms-dim h" id="msDimH"></span>
+        <span class="ms-grip r only-custom" data-grip="r" title="가로 늘이고 줄이기"></span>
+        <span class="ms-grip b only-custom" data-grip="b" title="세로 늘이고 줄이기"></span>
+        <span class="ms-grip c" data-grip="c" title="끌어서 크기 맞추기"></span>
+      </div>
+      <span class="ms-match only-custom" id="msMatch" hidden></span>
+    </div>
+    <div class="ms-row only-custom">
+      <label class="ms-num">가로 mm<input type="number" id="msW" step="1" min="10"></label>
+      <label class="ms-num">세로 mm<input type="number" id="msH" step="1" min="10"></label>
+    </div>
+    <div class="ms-row only-screen">
+      <div class="ms-scale">
+        <button class="ms-step" id="msLess" title="작게">−</button>
+        <input type="range" id="msScale" min="250" max="800" step="1" aria-label="화면 배율">
+        <button class="ms-step" id="msMore" title="크게">+</button>
+      </div>
+    </div>
+    <div class="ms-foot">
+      <button class="link only-note" id="msToCustom">맞는 크기가 없어요: 직접 맞추기</button>
+      <button class="link only-custom" id="msToList">크기 목록으로</button>
+      <button class="link note-or-custom" id="msToScreen">화면 크기 다시 맞추기</button>
+      <div class="pd-acts">
+        <button class="pd-cancel" id="msCancel">취소</button>
+        <button class="pd-go note-or-custom" id="msApply">이 크기로 쓰기</button>
+        <button class="pd-go only-screen" id="msScreenDone">맞췄어요</button>
+      </div>
     </div>
   </div>
 </div>
@@ -683,6 +804,7 @@
   <details class="sec">
   <summary><h2>포스트잇 크기와 위치<span class="h2-sub" id="sizeSummary">단위 mm</span></h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary>
   <div class="sec-body">
+  <button class="measure-btn" id="measureOpen" title="모니터에 포스트잇을 대 보고 실제 크기로 고르기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5L15.5 3l5.5 5.5L8.5 21z"/><path d="M7 11.5l2 2M10 8.5l2 2M13 5.5l2 2"/></svg>포스트잇을 화면에 대 보고 고르기</button>
   <select class="preset" id="preset"></select>
   <div class="row2 size-acts">
     <button class="small-btn" id="sizeSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>지금 크기 저장</span></button>
@@ -2481,6 +2603,234 @@
   document.getElementById('pdCancel').addEventListener('click', closePrintDialog);
   printDlg.addEventListener('mousedown', e => { if (e.target === printDlg) closePrintDialog(); });
 
+  // ---------- 포스트잇을 화면에 대 보고 크기 고르기 ----------
+  // 모니터마다 1mm 가 몇 화면 점인지 다르다.
+  // 설치 프로그램은 창이 있는 모니터의 실제 크기(mm)를 Windows 에서 읽어 바로 계산한다 (모니터가 두 대여도 창이 있는 쪽).
+  // 못 읽으면(브라우저, 크기를 안 알려 주는 모니터) 카드(85.6 × 54 mm, 신용카드와 신분증 공통)로 한 번 맞춘다.
+  // 카드로 맞춘 값은 모니터마다 Windows 배율(devicePixelRatio)과 함께 저장하고, 자동 값보다 먼저 쓴다.
+  const CARD_MM = { w: 85.6, h: 53.98, r: 3.18 };
+  const CSS_PX_PER_MM = 96 / 25.4;   // 화면이 표준이라고 칠 때 값 (맞추기 전 처음 값)
+  const SNAP_MM = 1.5;               // 직접 맞출 때 이만큼 가까우면 목록의 크기로 붙인다
+  const measureDlg = document.getElementById('measureDlg');
+  const msObj = document.getElementById('msObj');
+  const msScale = document.getElementById('msScale');
+  let msSize = { w: 76, h: 76 }, msPx = CSS_PX_PER_MM, msScreen = { key: 'browser', px: 0, source: '' }, msWatch = 0;
+
+  // 지금 창이 있는 모니터: { key, px(화면 점/mm, 0 이면 모름), source('card' | 'auto' | ''), inch }
+  async function detectScreen() {
+    const dpr = window.devicePixelRatio || 1;
+    let key = 'browser', auto = 0, inch = 0;
+    const tauri = window.__TAURI__;
+    if (tauri && tauri.core) {
+      try {
+        const m = await tauri.core.invoke('monitor_info');
+        key = m.id || 'monitor';
+        let wmm = m.width_mm, hmm = m.height_mm;
+        if (wmm && hmm) {
+          if ((m.width_px > m.height_px) !== (wmm > hmm)) [wmm, hmm] = [hmm, wmm];   // 세로로 돌려 쓰는 모니터
+          const ax = m.width_px / wmm, ay = m.height_px / hmm;
+          const v = (ax + ay) / 2 / dpr;
+          // 가로, 세로 비율이 어긋나거나 말이 안 되는 값이면 모니터가 크기를 잘못 알려 준 것
+          if (Math.abs(ax - ay) / ax < 0.03 && v > 1.5 && v < 12) {
+            auto = v;
+            inch = Math.round(Math.hypot(wmm, hmm) / 25.4 * 10) / 10;
+          }
+        }
+      } catch (e) { console.warn('monitor_info', e); }
+    }
+    const cal = (state.screenCals || {})[key];
+    const card = cal && cal.pxPerMm > 0 ? cal.pxPerMm * (cal.dpr || 1) / dpr : 0;
+    return { key, px: card || auto, source: card ? 'card' : auto ? 'auto' : '', inch };
+  }
+  function showScreenSource() {
+    const el = document.getElementById('msSource');
+    el.textContent = msScreen.source === 'auto' ? '모니터 정보로 실제 크기를 맞췄어요' + (msScreen.inch ? ' (' + msScreen.inch + '인치 모니터)' : '')
+      : msScreen.source === 'card' ? '카드로 맞춘 화면 크기를 쓰고 있어요' : '';
+  }
+  // 목록 크기 + 내 포스트잇. 작은 것부터 늘어놓는다
+  const allSizes = () => PRESETS.concat(customSizes)
+    .map(p => ({ name: p.name, w: p.w, h: p.h }))
+    .filter((p, i, a) => a.findIndex(q => q.w === p.w && q.h === p.h) === i)
+    .sort((a, b) => a.w * a.h - b.w * b.h);
+  const sizeMatch = (w, h) => allSizes().find(p => Math.abs(p.w - w) <= SNAP_MM && Math.abs(p.h - h) <= SNAP_MM);
+  const sameSize = (a, b) => a.w === b.w && a.h === b.h;
+
+  async function openMeasure() {
+    msSize = { w: state.w, h: state.h };
+    msScreen = await detectScreen();
+    msPx = msScreen.px;
+    showScreenSource();
+    measureDlg.style.setProperty('--note', state.paperColor || '#FFF3A0');
+    measureDlg.classList.add('open');
+    measureDlg.setAttribute('aria-hidden', 'false');
+    if (!msPx) showScreenStep();
+    else if (allSizes().some(p => sameSize(p, msSize))) showNoteStep();
+    else showCustomStep();
+    // 창을 다른 모니터로 옮기거나 배율을 바꾸면 그 모니터 기준으로 다시 그린다
+    clearInterval(msWatch);
+    msWatch = setInterval(watchScreen, 1000);
+  }
+  function closeMeasure() {
+    clearInterval(msWatch);
+    measureDlg.classList.remove('open');
+    measureDlg.setAttribute('aria-hidden', 'true');
+  }
+  async function watchScreen() {
+    if (!measureDlg.classList.contains('open') || measureDlg.dataset.step === 'screen') return;
+    const now = await detectScreen();
+    if (now.key === msScreen.key && Math.abs(now.px - msScreen.px) < 0.005) return;
+    msScreen = now;
+    showScreenSource();
+    if (!now.px) { showScreenStep(); return; }
+    msPx = now.px;
+    if (measureDlg.dataset.step === 'note') showNoteStep(); else drawMeasure();
+  }
+
+  function showScreenStep() {
+    measureDlg.dataset.step = 'screen';
+    if (!msPx) msPx = msScreen.px || CSS_PX_PER_MM;
+    msScale.value = Math.round(msPx * 100);
+    drawMeasure();
+  }
+  function showCustomStep() {
+    measureDlg.dataset.step = 'custom';
+    drawMeasure();
+  }
+
+  // 크기마다 실물 크기의 포스트잇을 하나씩 늘어놓는다
+  function showNoteStep() {
+    measureDlg.dataset.step = 'note';
+    const box = document.getElementById('msGallery');
+    box.innerHTML = '';
+    allSizes().forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'ms-item';
+      b.title = p.name;
+      const paper = document.createElement('span');
+      paper.className = 'ms-paper';
+      paper.style.width = (p.w * msPx) + 'px';
+      paper.style.height = (p.h * msPx) + 'px';
+      paper.innerHTML = '<span class="ms-note"></span>';
+      const cap = document.createElement('span');
+      cap.className = 'cap';
+      cap.textContent = p.w + ' × ' + p.h;
+      const small = document.createElement('small');
+      small.textContent = p.name.replace(/\s*\d+(\.\d+)?×\d+(\.\d+)?/, '');
+      cap.appendChild(small);
+      b.append(paper, cap);
+      b.classList.toggle('cur', sameSize(p, { w: state.w, h: state.h }));
+      b.addEventListener('click', () => { msSize = { w: p.w, h: p.h }; markGallery(); });
+      box.appendChild(b);
+    });
+    markGallery();
+  }
+  function markGallery() {
+    const list = allSizes();
+    document.querySelectorAll('#msGallery .ms-item').forEach((b, i) => b.classList.toggle('on', sameSize(list[i], msSize)));
+  }
+
+  // 화면 맞추기의 카드, 직접 맞추기의 포스트잇을 실제 크기로 그린다
+  function drawMeasure() {
+    const onScreen = measureDlg.dataset.step === 'screen';
+    if (measureDlg.dataset.step === 'note') return;
+    const mm = onScreen ? CARD_MM : msSize;
+    msObj.className = 'ms-obj screen-or-custom' + (onScreen ? '' : ' note');
+    msObj.style.width = (mm.w * msPx) + 'px';
+    msObj.style.height = (mm.h * msPx) + 'px';
+    msObj.style.setProperty('--r', (CARD_MM.r * msPx) + 'px');
+    // 격자 한 칸 = 실제 10mm
+    document.getElementById('msStage').style.backgroundSize = (10 * msPx) + 'px ' + (10 * msPx) + 'px';
+    const fmt = v => (Math.round(v * 10) / 10).toString();
+    document.getElementById('msDimW').textContent = onScreen ? '카드 85.6 mm' : fmt(mm.w) + ' mm';
+    document.getElementById('msDimH').textContent = onScreen ? '54 mm' : fmt(mm.h) + ' mm';
+    if (onScreen) return;
+    document.getElementById('msW').value = Math.round(mm.w);
+    document.getElementById('msH').value = Math.round(mm.h);
+    const hit = sizeMatch(mm.w, mm.h);
+    const match = document.getElementById('msMatch');
+    match.hidden = !hit;
+    if (hit) match.textContent = hit.name + ' 크기예요';
+  }
+
+  // 손잡이 끌기: 화면 맞추기에서는 배율을, 직접 맞추기에서는 가로, 세로를 바꾼다
+  msObj.addEventListener('pointerdown', e => {
+    const grip = e.target.dataset && e.target.dataset.grip;
+    if (!grip) return;
+    e.preventDefault();
+    e.target.setPointerCapture(e.pointerId);
+    const start = { x: e.clientX, y: e.clientY, w: msSize.w, h: msSize.h, px: msPx };
+    const onScreen = measureDlg.dataset.step === 'screen';
+    const move = ev => {
+      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+      if (onScreen) {
+        // 카드 모양 그대로 커지고 작아지게 대각선 방향 이동량을 쓴다
+        const grow = (dx + dy * CARD_MM.w / CARD_MM.h) / 2;
+        msPx = Math.min(8, Math.max(2.5, start.px * (1 + grow / (CARD_MM.w * start.px))));
+        msScale.value = Math.round(msPx * 100);
+      } else {
+        const clamp = v => Math.min(200, Math.max(MIN_POSTIT_MM, v));
+        if (grip !== 'b') msSize.w = clamp(start.w + dx / msPx);
+        if (grip !== 'r') msSize.h = clamp(start.h + dy / msPx);
+      }
+      drawMeasure();
+    };
+    const up = () => {
+      e.target.removeEventListener('pointermove', move);
+      e.target.removeEventListener('pointerup', up);
+      if (!onScreen) {
+        // 손을 떼면 1mm 단위로, 목록 크기에 가까우면 그 크기로 붙인다
+        const hit = sizeMatch(msSize.w, msSize.h);
+        msSize = hit ? { w: hit.w, h: hit.h } : { w: Math.round(msSize.w), h: Math.round(msSize.h) };
+        drawMeasure();
+      }
+    };
+    e.target.addEventListener('pointermove', move);
+    e.target.addEventListener('pointerup', up);
+  });
+
+  ['msW', 'msH'].forEach((id, k) => {
+    document.getElementById(id).addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      if (!validSize(k ? 'h' : 'w', v)) return;
+      msSize = k ? { ...msSize, h: v } : { ...msSize, w: v };
+      drawMeasure();
+    });
+  });
+  msScale.addEventListener('input', () => { msPx = msScale.value / 100; drawMeasure(); });
+  const stepScale = d => { msPx = Math.min(8, Math.max(2.5, msPx + d)); msScale.value = Math.round(msPx * 100); drawMeasure(); };
+  document.getElementById('msLess').addEventListener('click', () => stepScale(-0.01));
+  document.getElementById('msMore').addEventListener('click', () => stepScale(0.01));
+
+  document.getElementById('msScreenDone').addEventListener('click', () => {
+    // 맞춘 모니터에만 쓴다 (모니터가 두 대면 각각 따로)
+    state = { ...state, screenCals: { ...(state.screenCals || {}), [msScreen.key]: { pxPerMm: msPx, dpr: window.devicePixelRatio || 1 } } };
+    saveState();
+    msScreen = { ...msScreen, px: msPx, source: 'card' };
+    showScreenSource();
+    showNoteStep();
+    flash('화면 크기를 맞췄습니다. 이제 포스트잇을 대 보세요');
+  });
+  document.getElementById('msToScreen').addEventListener('click', showScreenStep);
+  document.getElementById('msToCustom').addEventListener('click', showCustomStep);
+  document.getElementById('msToList').addEventListener('click', showNoteStep);
+  document.getElementById('msApply').addEventListener('click', () => {
+    const w = Math.round(msSize.w * 10) / 10, h = Math.round(msSize.h * 10) / 10;
+    if (!validSize('w', w) || !validSize('h', h)) { flash('가로와 세로를 10mm 이상, A4보다 작게 맞춰 주세요'); return; }
+    state = { ...state, w: w, h: h };
+    document.getElementById('w').value = w;
+    document.getElementById('h').value = h;
+    saveState(); render();
+    closeMeasure();
+    flash('포스트잇 크기를 ' + w + ' × ' + h + ' mm 로 바꿨습니다');
+  });
+  document.getElementById('msCancel').addEventListener('click', () => {
+    // 화면 맞추기를 처음 하는 중이면 닫고, 다시 맞추던 중이면 목록으로
+    if (measureDlg.dataset.step === 'screen' && msScreen.px) { msPx = msScreen.px; showNoteStep(); } else closeMeasure();
+  });
+  document.getElementById('msClose').addEventListener('click', closeMeasure);
+  measureDlg.addEventListener('mousedown', e => { if (e.target === measureDlg) closeMeasure(); });
+  document.getElementById('measureOpen').addEventListener('click', openMeasure);
+
   // ---------- 창 X: 끌지 한 번 묻는다 ----------
   const quitDlg = document.getElementById('quitDlg');
   const closeQuit = () => { quitDlg.classList.remove('open'); quitDlg.setAttribute('aria-hidden', 'true'); };
@@ -2533,6 +2883,7 @@
       if (quitDlg.classList.contains('open')) { closeQuit(); return; }
       if (printDlg.classList.contains('open')) { closePrintDialog(); return; }
       if (helpModal.classList.contains('open')) { closeHelp(); return; }
+      if (measureDlg.classList.contains('open')) { closeMeasure(); return; }
       if (document.querySelector('.tpl-menu')) { closeTplMenu(); return; }
       emojiBox.classList.remove('open');
       if (drawTool) setDrawTool(null);
@@ -2547,7 +2898,7 @@
       + '종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.';
   }
   if (window.__TAURI__ && window.__TAURI__.app) {
-    window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' v' + v; }).catch(() => {});
+    window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' ' + showVersion(v); }).catch(() => {});
   }
 
   // 화면 확대·축소 (CSS zoom: 마우스 좌표 계산은 그대로 맞고, 인쇄할 때는 100%로 되돌린다)
@@ -2579,6 +2930,11 @@
   const UPDATE_EVERY_MS = 6 * 60 * 60 * 1000;
   const updCard = document.getElementById('updCard');
   let lastUpdateCheck = 0, dismissedVersion = null, installing = false;
+  // 버전을 올리지 않은 긴급 패치는 "1.0.2+1" 처럼 오고, 화면에는 "v1.0.2 (패치 1)" 로 보여 준다
+  function showVersion(v) {
+    const [core, patch] = String(v).split('+');
+    return 'v' + core + (patch ? ' (패치 ' + patch + ')' : '');
+  }
   async function checkForUpdate(manual) {
     const tauri = window.__TAURI__;
     if (!tauri || !tauri.core) return;
@@ -2588,7 +2944,8 @@
       const info = await tauri.core.invoke('check_update');
       if (!info) { if (manual) flash('지금 최신 버전입니다'); return; }
       if (!manual && info.version === dismissedVersion) return;
-      document.getElementById('updTitle').textContent = '새 버전 v' + info.version + '이 있습니다';
+      updCard.dataset.version = info.version;
+      document.getElementById('updTitle').textContent = '새 버전 ' + showVersion(info.version) + '이 있습니다';
       document.getElementById('updNotes').textContent = info.notes || '';
       updCard.classList.add('show');
     } catch (e) {
@@ -2597,7 +2954,7 @@
     }
   }
   document.getElementById('updLater').addEventListener('click', () => {
-    dismissedVersion = (document.getElementById('updTitle').textContent.match(/v([\d.]+)/) || [])[1] || null;
+    dismissedVersion = updCard.dataset.version || null;
     updCard.classList.remove('show');
   });
   setInterval(() => checkForUpdate(false), UPDATE_EVERY_MS);

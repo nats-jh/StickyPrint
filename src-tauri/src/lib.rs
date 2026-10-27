@@ -59,12 +59,24 @@ const UPDATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 // 설치 파일 받기는 느린 회선을 생각해 넉넉하게. 끊기면 "받는 중"에 멈춰 있지 않고 실패로 끝난다
 const DOWNLOAD_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(600);
 
+// 버전을 올리지 않는 긴급 패치는 빌드 번호를 붙여 낸다: 1.0.2 < 1.0.2+1 < 1.0.2+2 < 1.0.3
+// 기본 비교는 + 뒤를 무시하므로, 같은 버전이면 + 뒤 숫자로 한 번 더 비교한다
+fn is_newer(current: semver::Version, remote: tauri_plugin_updater::RemoteRelease) -> bool {
+  let patch_no = |v: &semver::Version| v.build.as_str().parse::<u64>().unwrap_or(0);
+  match remote.version.cmp_precedence(&current) {
+    std::cmp::Ordering::Greater => true,
+    std::cmp::Ordering::Less => false,
+    std::cmp::Ordering::Equal => patch_no(&remote.version) > patch_no(&current),
+  }
+}
+
 #[tauri::command]
 async fn check_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
   use tauri_plugin_updater::UpdaterExt;
   let update = app
     .updater_builder()
     .timeout(UPDATE_TIMEOUT)
+    .version_comparator(is_newer)
     .build()
     .map_err(|e| e.to_string())?
     .check()
@@ -79,6 +91,7 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
   let update = app
     .updater_builder()
     .timeout(DOWNLOAD_TIMEOUT)
+    .version_comparator(is_newer)
     .build()
     .map_err(|e| e.to_string())?
     .check()
@@ -135,6 +148,102 @@ async fn print_page(window: tauri::WebviewWindow, printer: String) -> Result<(),
   })
   .await
   .map_err(|e| e.to_string())?
+}
+
+// 포스트잇을 화면에 실제 크기로 그리려고, 창이 있는 모니터의 실제 크기(mm)와 화면 점 수를 알려 준다.
+// 모니터는 연결될 때 자기 크기를 EDID 로 알려 주고, Windows 는 그것을 레지스트리에 둔다.
+// 모니터가 두 대면 지금 창이 있는 쪽을 본다. 크기를 못 읽으면 mm 는 비워 둔다 (화면에서 카드로 맞추게)
+#[derive(serde::Serialize)]
+struct MonitorInfo {
+  id: String,
+  width_px: u32,
+  height_px: u32,
+  width_mm: Option<u32>,
+  height_mm: Option<u32>,
+}
+
+#[tauri::command]
+async fn monitor_info(window: tauri::WebviewWindow) -> Result<MonitorInfo, String> {
+  let monitor = window
+    .current_monitor()
+    .map_err(|e| e.to_string())?
+    .ok_or("모니터를 찾지 못했습니다")?;
+  let name = monitor.name().cloned().unwrap_or_default();
+  let size = monitor.size();
+  #[cfg(windows)]
+  let (id, mm) = winmon::edid_size(&name);
+  #[cfg(not(windows))]
+  let (id, mm): (String, Option<(u32, u32)>) = (name.clone(), None);
+  Ok(MonitorInfo {
+    id: if id.is_empty() { name } else { id },
+    width_px: size.width,
+    height_px: size.height,
+    width_mm: mm.map(|m| m.0),
+    height_mm: mm.map(|m| m.1),
+  })
+}
+
+#[cfg(windows)]
+mod winmon {
+  use windows::core::HSTRING;
+  use windows::Win32::Graphics::Gdi::{EnumDisplayDevicesW, DISPLAY_DEVICEW};
+  use windows::Win32::System::Registry::{RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_BINARY};
+
+  const EDD_GET_DEVICE_INTERFACE_NAME: u32 = 1;
+
+  // "\\.\DISPLAY1" 같은 모니터 이름 → (모니터 구분 id, 실제 화면 크기 mm)
+  pub fn edid_size(display_name: &str) -> (String, Option<(u32, u32)>) {
+    let mut dd = DISPLAY_DEVICEW { cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32, ..Default::default() };
+    let found = unsafe { EnumDisplayDevicesW(&HSTRING::from(display_name), 0, &mut dd, EDD_GET_DEVICE_INTERFACE_NAME) };
+    if !found.as_bool() {
+      return (String::new(), None);
+    }
+    // 예: \\?\DISPLAY#GSM5B09#5&2a0b1c2&0&UID4352#{e6f07b5f-...}
+    let path = String::from_utf16_lossy(&dd.DeviceID[..dd.DeviceID.iter().position(|&c| c == 0).unwrap_or(dd.DeviceID.len())]);
+    let parts: Vec<&str> = path.trim_start_matches(['\\', '?']).split('#').collect();
+    if parts.len() < 3 {
+      return (String::new(), None);
+    }
+    let id = format!("{}/{}", parts[1], parts[2]);
+    let key = format!(r"SYSTEM\CurrentControlSet\Enum\{}\{}\{}\Device Parameters", parts[0], parts[1], parts[2]);
+    let mut buf = vec![0u8; 1024];
+    let mut len = buf.len() as u32;
+    let err = unsafe {
+      RegGetValueW(
+        HKEY_LOCAL_MACHINE,
+        &HSTRING::from(key),
+        &HSTRING::from("EDID"),
+        RRF_RT_REG_BINARY,
+        None,
+        Some(buf.as_mut_ptr() as *mut _),
+        Some(&mut len),
+      )
+    };
+    if err.is_err() {
+      return (id, None);
+    }
+    buf.truncate(len as usize);
+    (id, parse_edid_mm(&buf))
+  }
+
+  // EDID 에서 화면 크기(mm): 첫 번째 상세 타이밍(54번째 바이트부터)에 mm 단위로 있고, 없으면 21, 22번째의 cm 값
+  pub fn parse_edid_mm(e: &[u8]) -> Option<(u32, u32)> {
+    if e.len() < 128 || e[..8] != [0, 255, 255, 255, 255, 255, 255, 0] {
+      return None;
+    }
+    let pixel_clock = e[54] as u32 | (e[55] as u32) << 8;
+    if pixel_clock != 0 {
+      let w = e[66] as u32 | ((e[68] as u32 & 0xF0) << 4);
+      let h = e[67] as u32 | ((e[68] as u32 & 0x0F) << 8);
+      if w > 0 && h > 0 {
+        return Some((w, h));
+      }
+    }
+    if e[21] > 0 && e[22] > 0 {
+      return Some((e[21] as u32 * 10, e[22] as u32 * 10));
+    }
+    None
+  }
 }
 
 #[cfg(windows)]
@@ -239,6 +348,66 @@ fn quit_app(app: tauri::AppHandle) {
   app.exit(0);
 }
 
+#[cfg(test)]
+mod tests {
+  use super::is_newer;
+
+  fn newer(current: &str, remote: &str) -> bool {
+    let release: tauri_plugin_updater::RemoteRelease = serde_json::from_value(serde_json::json!({
+      "version": remote, "url": "https://example.com/a.exe", "signature": "x"
+    }))
+    .unwrap();
+    is_newer(semver::Version::parse(current).unwrap(), release)
+  }
+
+  #[cfg(windows)]
+  #[test]
+  fn edid_size_from_detailed_timing() {
+    // 24인치급 모니터: 상세 타이밍에 527 x 296 mm
+    let mut e = vec![0u8; 128];
+    e[..8].copy_from_slice(&[0, 255, 255, 255, 255, 255, 255, 0]);
+    e[21] = 53;
+    e[22] = 30;
+    e[54] = 0x02;
+    e[55] = 0x3a;
+    e[66] = (527 & 0xFF) as u8;
+    e[67] = (296 & 0xFF) as u8;
+    e[68] = (((527 >> 8) << 4) | (296 >> 8)) as u8;
+    assert_eq!(super::winmon::parse_edid_mm(&e), Some((527, 296)));
+    e[54] = 0;
+    e[55] = 0;
+    assert_eq!(super::winmon::parse_edid_mm(&e), Some((530, 300)));
+    assert_eq!(super::winmon::parse_edid_mm(&e[..100]), None);
+  }
+
+  // 이 PC 에 연결된 모니터에서 실제로 읽어 보기: cargo test --lib -- --ignored --nocapture
+  #[cfg(windows)]
+  #[test]
+  #[ignore]
+  fn print_connected_monitors() {
+    for n in 1..=6 {
+      let name = format!(r"\\.\DISPLAY{}", n);
+      let (id, mm) = super::winmon::edid_size(&name);
+      if !id.is_empty() {
+        println!("{} {} {:?}", name, id, mm);
+      }
+    }
+  }
+
+  #[test]
+  fn hotfix_order() {
+    assert!(newer("1.0.2", "1.0.2+1"));
+    assert!(newer("1.0.2+1", "1.0.2+2"));
+    assert!(newer("1.0.2+9", "1.0.2+10"));
+    assert!(newer("1.0.2+3", "1.0.3"));
+    assert!(newer("1.0.1", "1.0.2"));
+    assert!(!newer("1.0.2", "1.0.2"));
+    assert!(!newer("1.0.2+2", "1.0.2+1"));
+    assert!(!newer("1.0.3", "1.0.2+5"));
+    assert!(!newer("1.0.2+1", "1.0.2"));
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -287,6 +456,7 @@ pub fn run() {
       install_update,
       list_printers,
       print_page,
+      monitor_info,
       quit_app
     ])
     .run(tauri::generate_context!())

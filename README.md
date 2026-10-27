@@ -53,6 +53,16 @@ npm run build
    빌드, 서명, `latest.json` 생성, 이 저장소의 GitHub Release 업로드까지 한 번에 한다 (`gh` 로그인 필요)
 3. 설치된 프로그램은 다음에 켤 때 "새 버전이 있습니다" 안내를 띄우고, 누르면 받아서 설치한 뒤 다시 켜진다
 
+### 긴급 패치 (버전을 올리지 않고)
+
+`npm run hotfix -- "고친 점"`
+
+버전 뒤에 패치 번호를 붙여(`1.0.2` → `1.0.2+1` → `1.0.2+2`) 바로 배포한다. 세 곳의 버전은 스크립트가 바꾼다.
+- 앱 화면에는 `v1.0.2 (패치 1)` 로 보인다
+- GitHub 에는 `v1.0.2-patch1` 태그, `StickyPrint_1.0.2-patch1_x64-setup.exe` 로 올라간다 (`+` 는 주소에서 말썽이라 바꿈)
+- 앱은 `1.0.2 < 1.0.2+1 < 1.0.2+2 < 1.0.3` 순서로 새 버전을 알아본다 (`lib.rs` 의 `is_newer`)
+- 다음 정식 버전은 세 곳을 `1.0.3` 처럼 `+` 없이 바꾸고 `npm run release`
+
 앱은 `https://github.com/nats-jh/StickyPrint/releases/latest/download/latest.json` 을 본다.
 다운로드 횟수: `gh release view vX.Y.Z --json assets -q '.assets[]|.name+" "+(.downloadCount|tostring)'`
 

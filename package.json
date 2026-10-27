@@ -6,6 +6,7 @@
     "dev": "tauri dev",
     "build": "node scripts/tauri-build.mjs",
     "release": "node scripts/release.mjs",
+    "hotfix": "node scripts/hotfix.mjs",
     "tauri": "tauri"
   },
   "author": "kangjoonhyuk",
