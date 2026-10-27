@@ -181,8 +181,18 @@
     background: rgba(245, 200, 66, .16); color: #f5c842; font-size: 11px; font-weight: 600;
   }
   .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .acts button { white-space: nowrap; padding: 8px 6px; font-size: 12.5px; letter-spacing: -.01em;
-    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  /* 아이콘은 모두 왼쪽에 세로로 줄 맞춤. 좁으면 글자는 … 로 줄어들고 버튼 밖으로 나가지 않는다 */
+  .acts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acts button {
+    min-width: 0; padding: 8px 10px; font-size: 12px; letter-spacing: -.01em; text-align: left;
+    display: flex; align-items: center; justify-content: flex-start; gap: 7px;
+  }
+  .acts button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .acts #actSave, .acts #actNew { grid-column: 1 / -1; }
+  .acts #actNew { background: none; border-style: dashed; color: #b8c0c8; }
+  .acts #actNew:hover { color: #fff; background: #2b3138; }
+  .row2 .small-btn { min-width: 0; }
+  .row2 .small-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .acts button svg, .small-btn svg { width: 14px; height: 14px; flex: none; }
   .small-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
   .acts .primary { border-color: #4c9aff; background: #2a5aa0; }
@@ -473,12 +483,12 @@
     <div class="title" id="panelTitle"></div>
     <div class="desc" id="panelDesc"></div>
     <div class="acts">
-      <button class="primary" id="actSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></svg><span>저장</span></button>
-      <button id="actSaveAs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/><path d="M14.5 12v6M11.5 15h6"/></svg><span>새 이름으로 저장</span></button>
-      <button id="actRename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 20h6"/></svg><span>이름 바꾸기</span></button>
-      <button id="actRevert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>고친 것 취소</span></button>
+      <button class="primary" id="actSave" title="지금 내용으로 이 템플릿 덮어쓰기 (Ctrl+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></svg><span>저장</span></button>
+      <button id="actSaveAs" title="지금 내용을 새 이름의 템플릿으로 저장"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/><path d="M14.5 12v6M11.5 15h6"/></svg><span>사본 저장</span></button>
+      <button id="actRename" title="템플릿 이름 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 20h6"/></svg><span>이름 바꾸기</span></button>
+      <button id="actRevert" title="저장된 내용으로 되돌리기 (Ctrl+Z 로 다시 살릴 수 있음)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>고친 것 취소</span></button>
       <button id="actDelete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span id="actDeleteLabel">템플릿 삭제</span></button>
-      <button id="actNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>새 빈 템플릿</span></button>
+      <button id="actNew" title="빈 템플릿을 새로 만들어 이 칸에 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>새 빈 템플릿</span></button>
     </div>
     <div class="status" id="status"></div>
   </div>
