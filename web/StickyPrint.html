@@ -302,6 +302,12 @@
   .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .paper-colors { margin: 0 0 10px; }
   .paper-colors.all { margin: 10px 0 0; }
+  .view-ink { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+  .view-ink .pc-label { margin: 0; }
+  .view-ink .pd-seg { width: 124px; padding: 2px; border-radius: 7px; }
+  .view-ink .pd-seg button { display: block; padding: 4px 0; font-size: 11.5px; text-align: center; border-radius: 5px; }
+  /* 흑백 미리보기: 찍히는 글자, 그림만 회색으로 (포스트잇 색은 그대로) */
+  body.view-gray .slot .paper, body.view-gray .slot .deco { filter: grayscale(1); }
   .pc-swatches .pc-custom { width: 100%; height: auto; aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 5px; overflow: hidden; border: 1px dashed #5a636d; position: relative; cursor: pointer; }
   .pc-swatches .pc-custom input { position: absolute; inset: -6px; width: 40px; height: 40px; border: 0; padding: 0; cursor: pointer; opacity: 0; }
   .pc-swatches .pc-custom::after { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; color: #b8c0c8; font-weight: 600; font-size: 14px; line-height: 1; font-family: inherit; pointer-events: none; }
@@ -352,6 +358,43 @@
   .row2 .small-btn { flex: 1; font-size: 12px; padding: 7px 6px; white-space: nowrap; }
   .small-btn { background: none; color: #b8c0c8; font-size: 12px; padding: 5px 8px; margin-top: 6px; }
 
+  /* ---------- 포꾸 (칸 테두리 꾸미기) ---------- */
+  .deco-sec { margin-top: 12px; padding: 10px 10px 8px; background: #262b31; border: 1px solid #3a4048; border-radius: 8px; }
+  .deco-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .deco-logo { height: 30px; width: auto; display: block; margin: -2px 0 -2px -2px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+  .deco-who { font-size: 11px; color: #8b95a1; white-space: nowrap; }
+  .deco-tabs { margin-left: auto; display: flex; padding: 2px; gap: 2px; border-radius: 7px; background: #14171a; border: 1px solid #3a4048; }
+  .deco-tabs button { padding: 4px 9px; border: 0; border-radius: 5px; background: none; color: #8b95a1; font-size: 11.5px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .deco-tabs button:hover:not(.on) { color: #e6e6e6; background: #22272d; }
+  .deco-tabs button.on { background: #3a4048; color: #fff; }
+  .deco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .deco-tile {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 7px 4px 6px; min-width: 0;
+    border: 1px solid #333a42; border-radius: 8px; background: #1b1f23; color: #b8c0c8; font-size: 11px; font-family: inherit; cursor: pointer;
+    transition: border-color .15s, background-color .15s, transform .12s;
+  }
+  .deco-tile:hover:not(:disabled) { border-color: #5a6470; background: #22272d; transform: translateY(-1px); }
+  .deco-tile:active:not(:disabled) { transform: translateY(0); }
+  .deco-tile.on { border-color: #4c9aff; background: #22344d; color: #fff; }
+  .deco-tile.on::after {
+    content: ''; position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%;
+    background: #4c9aff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 11px no-repeat;
+    box-shadow: 0 0 0 2px #1f2328;
+  }
+  .deco-tile:disabled { cursor: default; opacity: .4; }
+  .deco-tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .deco-thumb { width: 64px; height: 64px; display: grid; place-items: center; }
+  .deco-mini { position: relative; overflow: hidden; border-radius: 1px; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .deco-mini.none { display: grid; place-items: center; }
+  .deco-mini.none::before { content: ''; position: absolute; inset: 0; border: 0.6mm dashed rgba(0,0,0,.18); }
+  .deco-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 20px; }
+  .deco-note { flex: 1; min-width: 0; font-size: 11px; color: #8b95a1; line-height: 1.4; }
+  .deco-note.warn-ish { color: #e8c96a; }
+  .deco-foot .small-btn { margin: 0; flex: none; }
+  /* 칸 안의 테두리 그림: 내용(.paper) 뒤에 깔린다. 저장되는 내용이 아니라 칸 설정 */
+  .slot .deco { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .deco img { position: absolute; display: block; }
+  body.m-frame .slot .deco { visibility: hidden; }
   .warn { margin-top: 10px; padding: 8px; border-radius: 4px; background: #4a1f1f; color: #ffb4b4; display: none; }
   .warn.show { display: block; }
   .help { color: #9aa4af; line-height: 1.6; font-size: 12px; margin: 0; padding-left: 16px; }
@@ -598,6 +641,7 @@
   @media print {
     .slot-chip { display: none !important; }
     .slot { background-color: transparent !important; }   /* 포스트잇 색은 화면 미리보기용 */
+    .slot .paper, .slot .deco { filter: none !important; }   /* 흑백 미리보기는 화면에서만. 색은 인쇄 창 설정을 따른다 */
     .update-card { display: none !important; }
     .page { opacity: 1 !important; }
     .zoombar, .tpl-menu, .add-tpl { display: none !important; }
@@ -781,6 +825,13 @@
       <span class="pc-label">미리보기 포스트잇 색 <small>(화면에서만, 인쇄 안 됨)</small></span>
       <div class="pc-swatches" id="paperColorsAll"></div>
     </div>
+    <div class="view-ink" title="흑백 프린터로 찍으면 어떻게 보일지 화면에서만 미리 봅니다. 실제 인쇄 색은 인쇄 창에서 고릅니다">
+      <span class="pc-label">미리보기 색 <small>(화면에서만)</small></span>
+      <div class="pd-seg" id="viewInk" role="radiogroup" aria-label="미리보기 색">
+        <button type="button" role="radio" data-gray="0">컬러</button>
+        <button type="button" role="radio" data-gray="1">흑백</button>
+      </div>
+    </div>
   </div>
   <div class="warn" id="warn"></div>
 
@@ -798,6 +849,21 @@
       <button id="actNew" title="빈 템플릿을 새로 만들어 이 칸에 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>새 빈 템플릿</span></button>
     </div>
     <div class="status" id="status"></div>
+  </div>
+  <div class="deco-sec" id="decoSec">
+    <div class="deco-head">
+      <img class="deco-logo" src="data/deco/pokku.png" alt="포꾸" title="선택한 칸의 가장자리를 그림으로 꾸밉니다. 내용 인쇄 때 함께 찍혀요">
+      <span class="deco-who" id="decoWho"></span>
+      <div class="deco-tabs" role="tablist">
+        <button type="button" role="tab" data-g="bw" title="검정 잉크만 써서 흑백 프린터에서도 또렷해요">흑백용</button>
+        <button type="button" role="tab" data-g="color" title="컬러 프린터용 파스텔 그림">컬러용</button>
+      </div>
+    </div>
+    <div class="deco-grid" id="decoGrid"></div>
+    <div class="deco-foot">
+      <span class="deco-note" id="decoNote"></span>
+      <button class="small-btn" id="decoAll" title="지금 고른 꾸미기를 모든 칸에 똑같이">모든 칸에</button>
+    </div>
   </div>
 
   <details class="sec">
@@ -1177,6 +1243,12 @@
         paper.contentEditable = 'true';
         paper.spellcheck = false;
         paper.innerHTML = slotHtml(i);
+        const deco = decoOf(i);
+        if (deco) {
+          const layer = decoLayer(deco, state.w, state.h);
+          slot.appendChild(layer.el);
+          paper.style.padding = layer.pad.map(v => v.toFixed(1) + 'mm').join(' ');
+        }
         historyOf(i);
         paper.addEventListener('input', () => { if (!suppressInput) onEdit(i, getHtml(i), true); });
         paper.addEventListener('keydown', e => onKey(e, i));
@@ -1259,7 +1331,7 @@
       add('이 칸 비우기', () => {
         if (!dropEditsOk(i)) return;
         sel = i;
-        state = { ...state, slots: withSlot(state.slots, i, ''), drafts: withoutDraft(state.drafts, i) };
+        state = { ...state, slots: withSlot(state.slots, i, ''), drafts: withoutDraft(state.drafts, i), decos: withoutDraft(state.decos || {}, i) };
         saveState(); render();
       }, 'clear');
     }
@@ -1346,6 +1418,7 @@
       if (cur && !known) custom.style.background = cur; else custom.style.background = '';
     };
     markSwatches(document.getElementById('paperColorsAll'), state.paperColor || '');
+    renderDecoPicker();
     document.querySelectorAll('#drawTools button, #drawTools select, #drawTools input').forEach(el => { el.disabled = !tpl; });
     if (!tpl && drawTool) setDrawTool(null);
     document.getElementById('tbWho').textContent = sel < 0 ? '선택 없음' : (sel + 1) + '번 칸' + (tpl ? ' 편집' : ' (비어 있음)');
@@ -2234,6 +2307,23 @@
   }
   buildPaperSwatches(document.getElementById('paperColorsAll'));
 
+  // 미리보기 색: 흑백 프린터로 찍었을 때 모습을 화면에서만 본다
+  function syncViewInk() {
+    const gray = !!state.viewGray;
+    document.body.classList.toggle('view-gray', gray);
+    document.querySelectorAll('#viewInk button').forEach(b => {
+      const on = (b.dataset.gray === '1') === gray;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
+    });
+  }
+  document.querySelectorAll('#viewInk button').forEach(b => b.addEventListener('click', () => {
+    state = { ...state, viewGray: b.dataset.gray === '1' };
+    saveState();
+    syncViewInk();
+  }));
+  syncViewInk();
+
   const emojiBox = document.getElementById('emoji');
   emojiBox.innerHTML = EMOJIS.map(e => '<button>' + e + '</button>').join('');
   emojiBox.querySelectorAll('button').forEach(btn => {
@@ -2466,6 +2556,214 @@
     document.addEventListener('mouseup', up);
   }
 
+  // ---------- 포꾸: 칸 가장자리를 그림으로 꾸미기 ----------
+  // data/deco 의 그림을 가장자리에 반복해서 놓는다. ring: 네 변을 돌며, rows: 위아래 줄만, corner: 오른쪽 아래에 큰 그림 하나.
+  // line: 그림 대신 점선(dash) 이나 동그란 점(dot), 여러 색(colors) 점선. corners: 네 모서리에 작은 그림
+  // s 는 76mm 포스트잇 기준 그림 크기(mm). 크기가 다른 포스트잇은 비율대로 키우고 줄이며, 개수는 변 길이에 맞춰 정한다
+  const DECO_RATIO = {   // 그림 가로/세로
+    'bw-bear': 1.189, 'bw-heart': 1.081, 'bw-bunny': 0.636, 'bw-flower': 1.047, 'bw-paw': 1.2, 'bw-cat': 0.891,
+    'bw-mushroom': 0.923, 'bw-leaf': 0.974, 'bw-tulip': 0.723, 'bw-star': 1.063, 'bw-sparkle': 0.84,
+    bear: 1.14, heart: 1.179, 'bear-balloon': 0.8, bunny: 0.809, carrot: 0.695, strawberry: 0.782, cherry: 0.923,
+    cosmos: 0.823, tulip: 0.759, daisy: 1.009, bouquet: 0.814, cloud: 1.457, rainbow: 1.571, sun: 0.982, star: 1.053,
+    'bw-shield': 0.995, 'bw-mask': 2.178, 'bw-bolt': 0.591, 'bw-burst': 1, 'bw-wizhat': 0.973, 'bw-wand': 0.818, 'bw-owl': 0.927, 'bw-book': 0.909, 'bw-potion': 0.791,
+    shield: 0.995, mask: 2.056, bolt: 0.623, burst: 0.964, wizhat: 1.053, wand: 0.814, owl: 0.977, book: 0.914, potion: 0.777
+  };
+  const DECOS = [
+    { id: 'bw-dash', group: 'bw', name: '점선', line: { dash: 2.2, gap: 1.4, w: 0.45, color: '#111' } },
+    { id: 'bw-dot', group: 'bw', name: '동글 점선', line: { dot: 0.95, gap: 2.3, color: '#111' }, corners: 'bw-heart' },
+    { id: 'bw-bear', group: 'bw', name: '곰돌이', ring: ['bw-bear', 'bw-heart'], s: 7 },
+    { id: 'bw-bunny', group: 'bw', name: '토끼', ring: ['bw-bunny', 'bw-flower'], s: 8 },
+    { id: 'bw-cat', group: 'bw', name: '고양이', ring: ['bw-paw'], s: 4.6, corner: { m: 'bw-cat', s: 15 } },
+    { id: 'bw-forest', group: 'bw', name: '숲속', rows: ['bw-mushroom', 'bw-leaf', 'bw-tulip', 'bw-leaf'], s: 8 },
+    { id: 'bw-star', group: 'bw', name: '반짝 별', ring: ['bw-star', 'bw-sparkle'], s: 5 },
+    { id: 'bw-hero', group: 'bw', name: '히어로', ring: ['bw-shield', 'bw-bolt', 'bw-mask', 'bw-bolt'], s: 6.5 },
+    { id: 'bw-magic', group: 'bw', name: '마법학교', ring: ['bw-wizhat', 'bw-wand', 'bw-potion', 'bw-book'], s: 6.5, corner: { m: 'bw-owl', s: 15 } },
+    { id: 'pink-dash', group: 'color', name: '분홍 점선', line: { dash: 2.4, gap: 1.5, w: 0.6, color: '#ef8aa5' }, corners: 'heart' },
+    { id: 'rainbow-dash', group: 'color', name: '무지개 점선', line: { dash: 2.4, gap: 1.2, w: 0.7, colors: ['#f29bb0', '#f5bf6b', '#eedc6a', '#94cf9b', '#8fc0ec', '#b9a0e3'] } },
+    { id: 'bear', group: 'color', name: '곰돌이', ring: ['bear', 'heart'], s: 7, corner: { m: 'bear-balloon', s: 16 } },
+    { id: 'bunny', group: 'color', name: '토끼', ring: ['bunny', 'carrot'], s: 7 },
+    { id: 'berry', group: 'color', name: '딸기 체리', ring: ['strawberry', 'cherry'], s: 6.5 },
+    { id: 'flowers', group: 'color', name: '꽃밭', rows: ['cosmos', 'tulip', 'daisy', 'bouquet', 'tulip'], s: 10 },
+    { id: 'sky', group: 'color', name: '무지개', rows: ['cloud', 'rainbow', 'sun', 'star'], s: 8 },
+    { id: 'hero', group: 'color', name: '히어로', ring: ['shield', 'bolt', 'mask', 'burst'], s: 6.5 },
+    { id: 'magic', group: 'color', name: '마법학교', ring: ['wizhat', 'wand', 'potion', 'book'], s: 6.5, corner: { m: 'owl', s: 15 } }
+  ];
+  const DECO_EDGE = 1.2;   // 포스트잇 끝에서 그림까지 (mm)
+  const decoOf = i => (i >= 0 && slotTpl(i) && DECOS.find(d => d.id === (state.decos || {})[i])) || null;
+
+  function decoImg(key, cx, cy, size, rot) {
+    const r = DECO_RATIO[key] || 1;
+    const w = r >= 1 ? size : size * r, h = r >= 1 ? size / r : size;
+    const img = document.createElement('img');
+    img.src = 'data/deco/' + key + '.png';
+    img.alt = '';
+    img.draggable = false;
+    Object.assign(img.style, { left: (cx - w / 2).toFixed(2) + 'mm', top: (cy - h / 2).toFixed(2) + 'mm', width: w.toFixed(2) + 'mm', height: h.toFixed(2) + 'mm' });
+    if (rot) img.style.transform = 'rotate(' + rot + 'deg)';
+    return img;
+  }
+
+  // 길이 len 의 변에 그림 크기 size 를 적당한 간격으로: 칸 수 n (점은 n+1 개)
+  const decoCount = (len, size) => Math.max(1, Math.round(len / (size * 1.35)));
+
+  // 테두리 그림 층과, 내용이 그림을 피하도록 줄 안쪽 여백 [위, 오른쪽, 아래, 왼쪽] (mm)
+  function decoLayer(d, W, H) {
+    const el = document.createElement('div');
+    el.className = 'deco';
+    const k = Math.min(1.25, Math.max(0.6, Math.min(W, H) / 76));
+    const add = (key, x, y, size, rot) => el.appendChild(decoImg(key, x, y, size, rot));
+    const cs = d.corner ? d.corner.s * k : 0;
+    let pad;
+    if (d.line) {
+      const L = d.line, e = DECO_EDGE + 0.9;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      Object.assign(svg.style, { position: 'absolute', inset: '0', width: '100%', height: '100%' });
+      // 모서리 그림이 있으면 선을 모서리 앞에서 끊어 네 변만 긋는다 (속이 빈 그림 안으로 선이 비치지 않게)
+      const cut = d.corners ? 0.6 + 5.2 * k + 0.4 : 0;
+      const shape = () => {
+        if (!cut) {
+          const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          [['x', e], ['y', e], ['width', W - 2 * e], ['height', H - 2 * e], ['rx', 3]].forEach(([a, v]) => r.setAttribute(a, v));
+          return r;
+        }
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', ['M', cut, e, 'H', W - cut, 'M', W - e, cut, 'V', H - cut, 'M', W - cut, H - e, 'H', cut, 'M', e, H - cut, 'V', cut].join(' '));
+        return path;
+      };
+      const rect = (color, dash, offset) => {
+        const r = shape();
+        [['fill', 'none'], ['stroke', color], ['stroke-width', L.dot || L.w], ['stroke-dasharray', dash], ['stroke-dashoffset', offset || 0]]
+          .forEach(([a, v]) => r.setAttribute(a, v));
+        if (L.dot) r.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(r);
+      };
+      if (L.dot) rect(L.color, '0 ' + L.gap);
+      else if (L.colors) {
+        const seg = L.dash + L.gap, period = seg * L.colors.length;
+        L.colors.forEach((c, j) => rect(c, L.dash + ' ' + (period - L.dash), -j * seg));
+      } else rect(L.color, L.dash + ' ' + L.gap);
+      el.appendChild(svg);
+      const p = e + 3.2;
+      pad = [p, p, p, p];
+    } else if (d.ring) {
+      const s = d.s * k, e = DECO_EDGE + s / 2;
+      const nx = decoCount(W - 2 * e, s), ny = decoCount(H - 2 * e, s);
+      const pts = [];
+      for (let i = 0; i <= nx; i++) pts.push([e + (W - 2 * e) * i / nx, e]);
+      for (let i = 1; i <= ny; i++) pts.push([W - e, e + (H - 2 * e) * i / ny]);
+      for (let i = nx - 1; i >= 0; i--) pts.push([e + (W - 2 * e) * i / nx, H - e]);
+      for (let i = ny - 1; i >= 1; i--) pts.push([e, e + (H - 2 * e) * i / ny]);
+      pts.forEach(([x, y], i) => {
+        if (cs && x > W - cs * 0.75 - e && y > H - cs * 0.75 - e) return;   // 큰 그림 자리는 비운다
+        add(d.ring[i % d.ring.length], x, y, s, i % 2 ? 8 : -8);
+      });
+      const p = s + DECO_EDGE + 1.5;
+      pad = [p, p, p, p];
+    } else {
+      const top = d.s * 0.7 * k, bottom = d.s * k;
+      [[top, 0], [bottom, 1]].forEach(([size, r]) => {
+        const e = DECO_EDGE + size / 2;
+        const n = decoCount(W - 2 * e, size * 0.95);
+        for (let i = 0; i <= n; i++) {
+          add(d.rows[(i + r * 2) % d.rows.length], e + (W - 2 * e) * i / n, r ? H - e : e, size, i % 2 ? 6 : -6);
+        }
+      });
+      pad = [top + DECO_EDGE + 2, 4, bottom + DECO_EDGE + 2, 4];
+    }
+    if (d.corners) {
+      const s = 5.2 * k, e = 0.6 + s / 2;   // 모서리 선을 덮고, 끝에서 잘리지 않게
+      [[e, e], [W - e, e], [W - e, H - e], [e, H - e]].forEach(([x, y], j) => add(d.corners, x, y, s, j % 2 ? 10 : -10));
+    }
+    if (cs) {
+      add(d.corner.m, W - DECO_EDGE - cs / 2, H - DECO_EDGE - cs / 2, cs, 0);
+      pad[2] = Math.max(pad[2], cs + DECO_EDGE + 1);
+    }
+    return { el, pad };
+  }
+
+  // 고르는 곳: 지금 포스트잇 크기와 색으로 작게 그린 미리보기. 크기, 색, 탭이 바뀔 때만 다시 그린다
+  const MM_PX = 96 / 25.4, DECO_THUMB_PX = 64;
+  let decoTab = null, decoBuilt = '';
+  function decoThumb(d) {
+    const W = state.w, H = state.h;
+    const mini = document.createElement('div');
+    mini.className = 'deco-mini' + (d ? '' : ' none');
+    Object.assign(mini.style, { width: W + 'mm', height: H + 'mm', background: state.paperColor || '#FFF3A0' });
+    mini.style.zoom = String(DECO_THUMB_PX / (Math.max(W, H) * MM_PX));
+    if (d) {
+      const layer = decoLayer(d, W, H).el;
+      // 작게 줄이면 점선이 안 보여서 미리보기에서만 굵고 길게
+      layer.querySelectorAll('rect, path').forEach(r => {
+        const x = (a, k) => r.setAttribute(a, String(r.getAttribute(a)).split(' ').map(v => parseFloat(v) * k).join(' '));
+        x('stroke-width', 3); x('stroke-dasharray', 1.8); x('stroke-dashoffset', 1.8);
+      });
+      mini.appendChild(layer);
+    }
+    return mini;
+  }
+  function renderDecoPicker() {
+    const cur = decoOf(sel);
+    const usable = sel >= 0 && !!slotTpl(sel);
+    if (!decoTab) decoTab = state.printGray === false ? 'color' : 'bw';
+    const key = [decoTab, state.w, state.h, state.paperColor || ''].join('|');
+    const grid = document.getElementById('decoGrid');
+    if (key !== decoBuilt) {
+      decoBuilt = key;
+      grid.innerHTML = '';
+      [null].concat(DECOS.filter(d => d.group === decoTab)).forEach(d => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'deco-tile';
+        b.dataset.deco = d ? d.id : '';
+        const box = document.createElement('div');
+        box.className = 'deco-thumb';
+        box.appendChild(decoThumb(d));
+        const name = document.createElement('span');
+        name.textContent = d ? d.name : '없음';
+        b.append(box, name);
+        b.addEventListener('click', () => setDeco(sel, d ? d.id : ''));
+        grid.appendChild(b);
+      });
+    }
+    grid.querySelectorAll('.deco-tile').forEach(b => {
+      b.disabled = !usable;
+      b.classList.toggle('on', usable && b.dataset.deco === (cur ? cur.id : ''));
+    });
+    document.querySelectorAll('.deco-tabs button').forEach(b => {
+      b.classList.toggle('on', b.dataset.g === decoTab);
+      b.setAttribute('aria-selected', String(b.dataset.g === decoTab));
+    });
+    document.getElementById('decoWho').textContent = sel >= 0 ? (sel + 1) + '번 칸' : '';
+    document.getElementById('decoAll').disabled = !cur;
+    const note = document.getElementById('decoNote');
+    const grayPrint = state.printGray !== false;
+    note.classList.toggle('warn-ish', !!(cur && cur.group === 'color' && grayPrint));
+    note.textContent = !usable ? '템플릿이 들어간 칸을 고르면 꾸밀 수 있어요'
+      : cur && cur.group === 'color' && grayPrint ? '흑백으로 인쇄하면 회색으로 찍혀요'
+      : cur ? '내용 인쇄 때 함께 찍혀요' : '';
+  }
+  function setDeco(i, id) {
+    if (i < 0 || !slotTpl(i)) return;
+    const decos = withoutDraft(state.decos || {}, i);
+    if (id) decos[i] = id;
+    state = { ...state, decos };
+    saveState(); render();
+  }
+  document.querySelectorAll('.deco-tabs button').forEach(b => b.addEventListener('click', () => {
+    decoTab = b.dataset.g;
+    renderDecoPicker();
+  }));
+  document.getElementById('decoAll').addEventListener('click', () => {
+    const cur = decoOf(sel);
+    if (!cur) return;
+    const decos = {};
+    layout().forEach((_, i) => { if (slotTpl(i)) decos[i] = cur.id; });
+    state = { ...state, decos };
+    saveState(); render();
+    flash('모든 칸을 "' + cur.name + '"(으)로 꾸몄어요');
+  });
+
   // Tab: 다음 칸, Shift+Tab: 앞 칸. 마지막 칸에서 Tab 을 누르면 줄이 하나 늘어난다
   function tabCell(back) {
     const td = cellAtCaret();
@@ -2536,7 +2834,7 @@
 
   document.getElementById('clear').addEventListener('click', () => {
     if (!confirm('모든 칸을 비울까요? 저장하지 않은 고친 내용도 지워집니다.')) return;
-    state = { ...state, slots: [], drafts: {} };
+    state = { ...state, slots: [], drafts: {}, decos: {} };
     saveState(); render();
   });
 
@@ -2953,6 +3251,7 @@
     undoOrder = []; redoOrder = [];
     ['w', 'h', 'mx', 'my', 'gap'].forEach(k => { document.getElementById(k).value = state[k]; });
     syncPreset();
+    syncViewInk();
     render();
     flash('다른 창에서 바뀐 내용을 불러왔습니다');
   });
