@@ -15,24 +15,31 @@ fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
   Ok(dir)
 }
 
+// 파일 읽고 쓰기는 화면이 멈추지 않게 async 명령으로 (동기 명령은 메인 스레드에서 돈다)
 #[tauri::command]
-fn backup_read(app: tauri::AppHandle) -> Result<Option<String>, String> {
+async fn backup_read(app: tauri::AppHandle) -> Result<Option<String>, String> {
   let dir = data_dir(&app)?;
+  // 정전 등으로 비었거나 깨진 백업이면 직전 백업으로 넘어간다
   for name in [BACKUP, BACKUP_PREV] {
     if let Ok(text) = fs::read_to_string(dir.join(name)) {
-      return Ok(Some(text));
+      if serde_json::from_str::<serde_json::Value>(&text).is_ok() {
+        return Ok(Some(text));
+      }
     }
   }
   Ok(None)
 }
 
 #[tauri::command]
-fn backup_write(app: tauri::AppHandle, data: String) -> Result<(), String> {
+async fn backup_write(app: tauri::AppHandle, data: String) -> Result<(), String> {
+  use std::io::Write;
   let dir = data_dir(&app)?;
   let path = dir.join(BACKUP);
   let tmp = dir.join("backup.json.tmp");
-  // 임시 파일에 다 쓴 뒤 바꿔 끼운다. 쓰다가 꺼져도 기존 백업은 남는다
-  fs::write(&tmp, data).map_err(|e| e.to_string())?;
+  // 임시 파일에 다 쓰고 디스크에 확실히 내린 뒤 바꿔 끼운다. 쓰다가 꺼져도 기존 백업은 남는다
+  let mut f = fs::File::create(&tmp).map_err(|e| e.to_string())?;
+  f.write_all(data.as_bytes()).and_then(|_| f.sync_all()).map_err(|e| e.to_string())?;
+  drop(f);
   if path.exists() {
     let _ = fs::copy(&path, dir.join(BACKUP_PREV));
   }
@@ -49,6 +56,8 @@ struct UpdateInfo {
 
 // 인터넷이 없거나 느린 곳에서도 오래 붙잡히지 않게 10초 안에 끝낸다 (실패해도 앱 사용에는 영향 없음)
 const UPDATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+// 설치 파일 받기는 느린 회선을 생각해 넉넉하게. 끊기면 "받는 중"에 멈춰 있지 않고 실패로 끝난다
+const DOWNLOAD_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(600);
 
 #[tauri::command]
 async fn check_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
@@ -68,7 +77,9 @@ async fn check_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, Strin
 async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
   use tauri_plugin_updater::UpdaterExt;
   let update = app
-    .updater()
+    .updater_builder()
+    .timeout(DOWNLOAD_TIMEOUT)
+    .build()
     .map_err(|e| e.to_string())?
     .check()
     .await
@@ -87,15 +98,20 @@ struct Printers {
   default: Option<String>,
 }
 
+// 꺼진 네트워크 프린터를 찾느라 오래 걸릴 수 있어 별도 스레드에서
 #[tauri::command]
-fn list_printers() -> Printers {
-  #[cfg(windows)]
-  {
-    let (names, default) = winprint::list();
-    Printers { names, default }
-  }
-  #[cfg(not(windows))]
-  Printers { names: vec![], default: None }
+async fn list_printers() -> Printers {
+  tauri::async_runtime::spawn_blocking(|| {
+    #[cfg(windows)]
+    {
+      let (names, default) = winprint::list();
+      Printers { names, default }
+    }
+    #[cfg(not(windows))]
+    Printers { names: vec![], default: None }
+  })
+  .await
+  .unwrap_or(Printers { names: vec![], default: None })
 }
 
 #[tauri::command]
@@ -115,7 +131,7 @@ async fn print_page(window: tauri::WebviewWindow, printer: String) -> Result<(),
   // 프린터 응답을 기다리는 동안 다른 작업을 막지 않도록 별도 스레드에서 기다린다
   tauri::async_runtime::spawn_blocking(move || {
     rx.recv_timeout(std::time::Duration::from_secs(120))
-      .unwrap_or_else(|_| Err("프린터가 응답하지 않습니다".into()))
+      .unwrap_or_else(|_| Err("프린터가 응답하지 않습니다. 조금 늦게 인쇄될 수도 있으니 다시 인쇄하기 전에 프린터를 확인해 주세요".into()))
   })
   .await
   .map_err(|e| e.to_string())?
@@ -138,15 +154,22 @@ mod winprint {
       let flags = PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS;
       let (mut needed, mut count) = (0u32, 0u32);
       let _ = EnumPrintersW(flags, PCWSTR::null(), 4, None, &mut needed, &mut count);
-      if needed > 0 {
-        let mut buf = vec![0u8; needed as usize];
-        if EnumPrintersW(flags, PCWSTR::null(), 4, Some(&mut buf), &mut needed, &mut count).is_ok() {
+      // 두 번 부르는 사이에 프린터가 늘면 버퍼가 모자라므로 한 번 더 시도한다
+      for _ in 0..2 {
+        if needed == 0 {
+          break;
+        }
+        // PRINTER_INFO_4W 는 8바이트 정렬이 필요해 u64 로 잡는다
+        let mut buf = vec![0u64; (needed as usize).div_ceil(8)];
+        let bytes = std::slice::from_raw_parts_mut(buf.as_mut_ptr() as *mut u8, needed as usize);
+        if EnumPrintersW(flags, PCWSTR::null(), 4, Some(bytes), &mut needed, &mut count).is_ok() {
           let infos = std::slice::from_raw_parts(buf.as_ptr() as *const PRINTER_INFO_4W, count as usize);
           for info in infos {
             if let Ok(name) = info.pPrinterName.to_string() {
               names.push(name);
             }
           }
+          break;
         }
       }
       let mut len = 0u32;
@@ -219,6 +242,14 @@ fn quit_app(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    // 이미 켜져 있으면 새로 띄우지 않고 기존 창을 앞으로 (여러 개가 같은 저장소를 덮어쓰지 않게). 가장 먼저 등록해야 한다
+    .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+      if let Some(w) = app.get_webview_window("main") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+      }
+    }))
     .plugin(tauri_plugin_updater::Builder::new().build())
     .on_window_event(|window, event| {
       use std::sync::atomic::Ordering;
