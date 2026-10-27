@@ -63,7 +63,37 @@
   .help-btn svg { width: 14px; height: 14px; }
   .help-btn:hover { background: #353c44; color: #fff; }
 
-  /* ---------- 사용법 창 ---------- */
+  /* ---------- 사용법: 화면 위에 짚어 주기 ---------- */
+  #tour { position: fixed; inset: 0; z-index: 95; display: none; }
+  #tour.open { display: block; animation: tour-in .2s ease-out; }
+  @keyframes tour-in { from { opacity: 0; } to { opacity: 1; } }
+  .tour-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .tour-dim { fill: rgba(8, 10, 13, .72); }
+  .tour-ring { fill: none; stroke: #f5c842; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(245, 200, 66, .6)); animation: tour-pulse 1.6s ease-in-out infinite; }
+  @keyframes tour-pulse { 50% { stroke-width: 5; } }
+  .tour-arrow { fill: none; stroke: #FFF3A0; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 2 7; }
+  /* 설명은 노란 포스트잇 쪽지로 */
+  .tour-note {
+    position: absolute; width: 290px; padding: 16px 18px 14px; border-radius: 3px; color: #2a2a22;
+    background: #FFF3A0 url(data/paper_texture.png) 0 0 / 240px; background-blend-mode: multiply;
+    box-shadow: 0 2px 2px rgba(0,0,0,.2), 0 14px 30px rgba(0,0,0,.45); transform: rotate(-.6deg);
+    transition: left .25s cubic-bezier(.2,.8,.2,1), top .25s cubic-bezier(.2,.8,.2,1);
+  }
+  .tour-note .no { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 8px; border-radius: 50%; background: #1f2328; color: #f5c842; font-weight: 800; font-size: 13px; vertical-align: middle; }
+  .tour-note b { font-size: 16px; vertical-align: middle; color: #1d1d17; }
+  .tour-note p { margin: 9px 0 14px; font-size: 13px; line-height: 1.6; color: #3d3b2c; }
+  .tour-nav { display: flex; align-items: center; gap: 6px; }
+  .tour-dots { display: flex; gap: 5px; margin-right: auto; }
+  .tour-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(0,0,0,.18); }
+  .tour-dots i.on { width: 18px; border-radius: 4px; background: #1f2328; }
+  .tour-nav button { padding: 7px 12px; border-radius: 7px; font-weight: 700; font-size: 12.5px; font-family: inherit; cursor: pointer; border: 1px solid rgba(0,0,0,.15); background: rgba(255,255,255,.5); color: #2a2a22; }
+  .tour-nav button:hover { background: rgba(255,255,255,.85); }
+  .tour-nav .tour-skip { border-color: transparent; background: none; color: #6b6750; font-weight: 500; }
+  .tour-nav .tour-skip:hover { background: rgba(0,0,0,.06); }
+  .tour-nav .tour-next { background: #1f2328; border-color: #1f2328; color: #fff; }
+  .tour-nav .tour-next:hover { background: #2f353d; }
+  .tour-nav button[hidden] { display: none; }
+  /* ---------- 창 (인쇄, 끄기, 크기 맞추기) ---------- */
   .modal {
     position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
     background: rgba(10, 12, 15, .55); backdrop-filter: blur(2px); opacity: 0; visibility: hidden; transition: opacity .18s, visibility .18s;
@@ -175,38 +205,15 @@
   #measureDlg[data-step="screen"] :is(.only-note, .only-custom, .note-or-custom),
   #measureDlg[data-step="note"] :is(.only-screen, .only-custom, .screen-or-custom),
   #measureDlg[data-step="custom"] :is(.only-screen, .only-note) { display: none !important; }
-  .measure-btn { width: 100%; margin: 0 0 8px; padding: 8px 10px; border-radius: 7px; border: 1px dashed #4c9aff; background: rgba(76,154,255,.08); color: #cfe2ff; font-size: 12.5px; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .measure-btn:hover { background: rgba(76,154,255,.16); color: #fff; }
-  .measure-btn svg { width: 15px; height: 15px; }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 2px; }
-  .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  /* 인쇄 순서의 첫 단계: 다른 버튼보다 눈에 띄게 (노란 테두리) */
+  .btns .print-btn.measure-card { border-color: rgba(245, 200, 66, .55); background: linear-gradient(90deg, rgba(245, 200, 66, .12), rgba(245, 200, 66, .03)); }
+  .btns .print-btn.measure-card:hover { background: rgba(245, 200, 66, .18); border-color: #f5c842; }
+  .print-btn .pi img { width: 18px; height: 18px; display: block; }
+  .measure-card .ms-now { margin-left: auto; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #f5c842; background: rgba(245, 200, 66, .12); }
+  .preset-label { display: block; margin-bottom: 4px; font-size: 11px; color: #8b95a1; }
   .modal-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; cursor: pointer; display: grid; place-items: center; }
   .modal-x:hover { background: #353c44; color: #fff; }
   .modal-x svg { width: 16px; height: 16px; }
-  .modal-body { padding: 4px 22px 22px; font-size: 13px; line-height: 1.6; }
-  .modal-body h4 { margin: 18px 0 8px; font-size: 12px; color: #f5c842; letter-spacing: .03em; font-weight: 700; }
-  .modal-body p { margin: 0; color: #c3cad2; }
-  .steps { list-style: none; margin: 0; padding: 0; }
-  .steps li { position: relative; padding: 0 0 12px 22px; display: flex; flex-direction: column; }
-  .steps li::before { content: ''; position: absolute; left: 2px; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: #f5c842; }
-  .steps li::after { content: ''; position: absolute; left: 6px; top: 18px; bottom: -3px; width: 1px; background: #3a4048; }
-  .steps li:last-child::after { display: none; }
-  .steps b { color: #fff; font-size: 13.5px; }
-  .steps span { color: #aab3bd; font-size: 12.5px; }
-  .modal-body .note-box {
-    padding: 9px 12px; border-radius: 8px; background: rgba(245, 200, 66, .08); border: 1px solid rgba(245, 200, 66, .22);
-    color: #e8dcae; font-size: 12.5px;
-  }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
-  .cards > div { background: #262b31; border: 1px solid #333a42; border-radius: 10px; padding: 12px 14px; }
-  .cards h4 { margin: 0 0 4px; }
-  .cards p { font-size: 12.5px; }
-  .modal-body .help-foot { margin-top: 16px; font-size: 12px; color: #8b95a1; }
-  .keys-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 22px; justify-content: start; color: #c3cad2; font-size: 12.5px; }
-  kbd {
-    display: inline-block; min-width: 22px; padding: 1px 6px; border-radius: 5px; background: #2b3138; border: 1px solid #444c56;
-    border-bottom-width: 2px; font-weight: 600; font-size: 11px; line-height: 1.6; font-family: inherit; color: #e6e6e6; text-align: center;
-  }
   .brand b { font-weight: 800; }
   .brand span span { font-weight: 300; color: #c9d1d9; }
 
@@ -622,43 +629,17 @@
     </div>
   </div>
 </div>
-<div id="help" class="modal" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-labelledby="helpTitle">
-    <div class="modal-head">
-      <h3 id="helpTitle">사용법</h3>
-      <button class="modal-x" id="helpClose" title="닫기 (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <h4>인쇄하기</h4>
-      <ol class="steps">
-        <li><b>칸에 템플릿 넣기</b><span>빈 칸의 "+ 템플릿 넣기"를 누릅니다. 채워진 칸은 위쪽 이름표를 눌러 바꾸거나 비웁니다.</span></li>
-        <li><b>테두리 인쇄</b><span>빈 A4에 포스트잇 붙일 자리(점선)가 모든 칸에 찍힙니다. 이 종이는 계속 재활용하세요.</span></li>
-        <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
-        <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다. 템플릿이 있는 칸만 찍힙니다.</span></li>
-      </ol>
-      <p class="note-box" id="printNote">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.
-        종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.</p>
-
-      <div class="cards">
-        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 표, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 표 안을 클릭하면 행, 열 추가와 삭제 버튼이 나오고, Tab 으로 다음 칸으로 갑니다. 글자를 드래그한 뒤 누르세요.</p></div>
-        <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다. 지우개는 도형을 클릭. Esc로 끝냅니다.</p></div>
-        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 고르고, 배경이나 앞에 띄운 사진은 끌어서 옮깁니다.</p></div>
-        <div><h4>템플릿 저장</h4><p>고친 칸은 이름표에 노란 점이 생깁니다. 저장하면 그 템플릿에, 사본 저장은 새 템플릿으로 남습니다. 다른 PC로는 내보내기 → 가져오기.</p></div>
-        <div><h4>되돌리기</h4><p>칸을 클릭한 뒤 Ctrl+Z는 그 칸만 되돌립니다(그리기 포함). 칸 바깥을 클릭해 선택을 풀면 가장 최근에 바뀐 칸부터 되돌립니다.</p></div>
-        <div><h4>보기와 크기</h4><p>미리보기 아래에서 포스트잇 색을 깔아 볼 수 있습니다(인쇄 안 됨). 화면 크기는 오른쪽 아래 버튼이나 Ctrl+휠, 포스트잇 크기는 왼쪽 아래 "크기와 위치"에서 고르고, "포스트잇을 화면에 대 보고 고르기"로 실물을 모니터에 대 보며 맞출 수도 있습니다.</p></div>
-      </div>
-
-      <h4>단축키</h4>
-      <div class="keys-grid">
-        <span><kbd>Ctrl</kbd> <kbd>Z</kbd> 되돌리기</span>
-        <span><kbd>Ctrl</kbd> <kbd>Y</kbd> 다시하기</span>
-        <span><kbd>Ctrl</kbd> <kbd>S</kbd> 템플릿 저장</span>
-        <span><kbd>Ctrl</kbd> <kbd>B</kbd> 굵게</span>
-        <span><kbd>Ctrl</kbd> <kbd>U</kbd> 밑줄</span>
-        <span><kbd>Ctrl</kbd> + 휠 화면 크게, 작게</span>
-        <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
-      </div>
-      <p class="help-foot">새 버전은 켤 때와 켜 둔 동안 6시간마다 자동으로 확인합니다. 왼쪽 아래 "업데이트 확인"으로 바로 확인할 수도 있습니다.</p>
+<div id="tour" aria-hidden="true">
+  <svg class="tour-svg" id="tourSvg"></svg>
+  <div class="tour-note" id="tourNote" role="dialog" aria-labelledby="tourTitle">
+    <span class="no" id="tourNo"></span>
+    <b id="tourTitle"></b>
+    <p id="tourText"></p>
+    <div class="tour-nav">
+      <span class="tour-dots" id="tourDots"></span>
+      <button class="tour-skip" id="tourSkip">닫기</button>
+      <button class="tour-prev" id="tourPrev">이전</button>
+      <button class="tour-next" id="tourNext">다음</button>
     </div>
   </div>
 </div>
@@ -761,10 +742,16 @@
 </div>
 <aside>
   <div class="brand"><img class="logo" src="data/logo.png" alt=""><img class="wordmark-sm" src="data/wordmark_name.png" alt="StickyPrint">
-    <button class="help-btn" id="helpOpen" title="사용법"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6"/><path d="M12 17h.01"/></svg>사용법</button>
+    <button class="help-btn" id="helpOpen" title="화면 위에서 순서대로 보여 줍니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6"/><path d="M12 17h.01"/></svg>사용법</button>
   </div>
   <h2>인쇄</h2>
   <div class="btns">
+    <button class="print-btn measure-card" id="measureOpen" title="가진 포스트잇을 모니터에 대 보고 실제 크기로 고르기">
+      <span class="pi"><img src="data:image/png;base64,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" alt=""></span>
+      <span class="pt"><b>포스트잇 크기 맞추기</b><small>화면에 대 보고 고르기</small></span>
+      <span class="ms-now" id="measureNow"></span>
+    </button>
+    <div class="step-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M7 14l5 5 5-5"/></svg></div>
     <button data-mode="frame" class="print-btn">
       <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.6"/></svg></span>
       <span class="pt"><b>테두리 인쇄</b><small>포스트잇 붙일 자리</small></span>
@@ -804,7 +791,7 @@
   <details class="sec">
   <summary><h2>포스트잇 크기와 위치<span class="h2-sub" id="sizeSummary">단위 mm</span></h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary>
   <div class="sec-body">
-  <button class="measure-btn" id="measureOpen" title="모니터에 포스트잇을 대 보고 실제 크기로 고르기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5L15.5 3l5.5 5.5L8.5 21z"/><path d="M7 11.5l2 2M10 8.5l2 2M13 5.5l2 2"/></svg>포스트잇을 화면에 대 보고 고르기</button>
+  <span class="preset-label">포스트잇이 없으면 목록에서 고르기</span>
   <select class="preset" id="preset"></select>
   <div class="row2 size-acts">
     <button class="small-btn" id="sizeSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>지금 크기 저장</span></button>
@@ -1408,6 +1395,7 @@
   function syncSizeSummary() {
     const el = document.getElementById('sizeSummary');
     if (el) el.textContent = '지금 ' + state.w + ' × ' + state.h + ' mm';
+    document.getElementById('measureNow').textContent = state.w + '×' + state.h;
   }
 
   function syncPreset() {
@@ -2879,10 +2867,14 @@
     if ((e.ctrlKey || e.metaKey) && key === 's') {
       e.preventDefault();   // 브라우저의 "페이지 저장" 대신 템플릿 저장
       if (slotTpl(sel) && hasDraft(sel)) actSave(); else if (slotTpl(sel)) flash('고친 내용이 없습니다');
+    } else if (tourEl.classList.contains('open') && (e.key === 'ArrowRight' || e.key === 'Enter')) {
+      e.preventDefault(); document.getElementById('tourNext').click();
+    } else if (tourEl.classList.contains('open') && e.key === 'ArrowLeft') {
+      e.preventDefault(); document.getElementById('tourPrev').click();
     } else if (e.key === 'Escape') {
       if (quitDlg.classList.contains('open')) { closeQuit(); return; }
       if (printDlg.classList.contains('open')) { closePrintDialog(); return; }
-      if (helpModal.classList.contains('open')) { closeHelp(); return; }
+      if (tourEl.classList.contains('open')) { closeTour(); return; }
       if (measureDlg.classList.contains('open')) { closeMeasure(); return; }
       if (document.querySelector('.tpl-menu')) { closeTplMenu(); return; }
       emojiBox.classList.remove('open');
@@ -2892,11 +2884,6 @@
   });
 
   // 설치 프로그램이면 버전 표시 (업데이트가 됐는지 확인용)
-  // 설치 프로그램은 배율, 여백을 앱이 맞추므로 프린터만 고르면 된다
-  if (window.__TAURI__ && window.__TAURI__.core) {
-    document.getElementById('printNote').innerHTML = '인쇄 버튼을 누르면 <b>프린터만 고르면</b> 됩니다. 배율, 여백은 앱이 알아서 맞춥니다. '
-      + '종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.';
-  }
   if (window.__TAURI__ && window.__TAURI__.app) {
     window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' ' + showVersion(v); }).catch(() => {});
   }
@@ -2985,24 +2972,107 @@
     link.addEventListener('click', () => checkForUpdate(true));
   }
 
-  // 사용법 창: 왼쪽 위 버튼으로 열고, 처음 실행할 때 한 번은 자동으로 연다
-  const helpModal = document.getElementById('help');
+  // 사용법: 화면을 어둡게 하고 눌러야 할 버튼을 하나씩 동그라미와 화살표로 짚어 준다. 처음 실행할 때 한 번은 자동으로
   const HELP_SEEN_KEY = STORE_KEY + '-help-seen';
-  function openHelp() {
-    helpModal.classList.add('open');
-    helpModal.setAttribute('aria-hidden', 'false');
-    document.getElementById('helpClose').focus();
+  // 사용법 내용을 바꾸면 이 숫자를 올린다. 이미 본 사람에게도 다음에 켤 때 한 번 더 보여 준다
+  // (예전 글자 사용법 창은 '1' 로 저장했으므로 2 부터)
+  const TOUR_VERSION = 2;
+  const TOUR = [
+    { title: '포스트잇 크기 맞추기', text: '가진 포스트잇을 화면에 대 보고 같은 크기를 고르세요. 처음 한 번만 하면 됩니다.',
+      el: () => document.getElementById('measureOpen') },
+    { title: '칸에 템플릿 넣기', text: '빈 칸을 눌러 할 일, 메모 같은 템플릿을 넣으세요. 글자는 포스트잇을 눌러 바로 고치면 됩니다.',
+      el: () => document.querySelector('.slot.empty .add-tpl') || document.querySelector('.slot') },
+    { title: '테두리 인쇄', text: '빈 A4에 포스트잇 붙일 자리가 점선으로 찍혀요. 점선에 맞춰 포스트잇을 붙이세요.',
+      el: () => document.querySelector('[data-mode="frame"]') },
+    { title: '내용 인쇄', text: '포스트잇을 붙인 종이를 같은 방향으로 다시 넣고 인쇄하면 끝입니다.',
+      el: () => document.querySelector('[data-mode="content"]') }
+  ];
+  const tourEl = document.getElementById('tour');
+  let tourAt = 0;
+
+  function openTour() {
+    tourAt = 0;
+    document.getElementById('tourNote').dataset.placed = '';
+    tourEl.classList.add('open');
+    tourEl.setAttribute('aria-hidden', 'false');
+    showTourStep();
   }
-  function closeHelp() {
-    helpModal.classList.remove('open');
-    helpModal.setAttribute('aria-hidden', 'true');
-    try { localStorage.setItem(HELP_SEEN_KEY, '1'); } catch (e) { /* 무시 */ }
+  function closeTour() {
+    tourEl.classList.remove('open');
+    tourEl.setAttribute('aria-hidden', 'true');
+    try { localStorage.setItem(HELP_SEEN_KEY, String(TOUR_VERSION)); } catch (e) { /* 무시 */ }
   }
-  document.getElementById('helpOpen').addEventListener('click', openHelp);
-  document.getElementById('helpClose').addEventListener('click', closeHelp);
-  helpModal.addEventListener('mousedown', e => { if (e.target === helpModal) closeHelp(); });
+  function showTourStep() {
+    const step = TOUR[tourAt];
+    document.getElementById('tourNo').textContent = tourAt + 1;
+    document.getElementById('tourTitle').textContent = step.title;
+    document.getElementById('tourText').textContent = step.text;
+    document.getElementById('tourDots').innerHTML = TOUR.map((_, k) => '<i' + (k === tourAt ? ' class="on"' : '') + '></i>').join('');
+    document.getElementById('tourPrev').hidden = tourAt === 0;
+    document.getElementById('tourNext').textContent = tourAt === TOUR.length - 1 ? '시작하기' : '다음';
+    const target = step.el();
+    if (target) target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    requestAnimationFrame(placeTour);
+  }
+
+  // 짚을 버튼 둘레만 밝게 뚫고, 노란 동그라미와 화살표, 설명 쪽지를 놓는다
+  function placeTour() {
+    if (!tourEl.classList.contains('open')) return;
+    const target = TOUR[tourAt].el();
+    const svg = document.getElementById('tourSvg');
+    const note = document.getElementById('tourNote');
+    const W = window.innerWidth, H = window.innerHeight, PAD = 7, GAP = 70, M = 14;
+    const t = target ? target.getBoundingClientRect() : { left: W / 2, top: H / 2, width: 0, height: 0 };
+    const ring = { x: t.left - PAD, y: t.top - PAD, w: t.width + PAD * 2, h: t.height + PAD * 2 };
+    const nw = note.offsetWidth, nh = note.offsetHeight;
+    const cy = ring.y + ring.h / 2, cx = ring.x + ring.w / 2;
+    const spots = [
+      { side: 'right', x: ring.x + ring.w + GAP, y: cy - nh / 2 },
+      { side: 'below', x: cx - nw / 2, y: ring.y + ring.h + GAP },
+      { side: 'left', x: ring.x - GAP - nw, y: cy - nh / 2 },
+      { side: 'above', x: cx - nw / 2, y: ring.y - GAP - nh }
+    ];
+    const fits = q => q.x >= M && q.y >= M && q.x + nw <= W - M && q.y + nh <= H - M;
+    const spot = spots.find(fits) || { ...spots[0], x: Math.min(Math.max(M, spots[0].x), W - nw - M), y: Math.min(Math.max(M, spots[0].y), H - nh - M) };
+    spot.y = Math.min(Math.max(M, spot.y), H - nh - M);
+    spot.x = Math.min(Math.max(M, spot.x), W - nw - M);
+    // 처음 열 때는 그 자리에 바로 놓고, 다음 단계로 넘길 때만 미끄러지듯 옮긴다
+    if (!note.dataset.placed) note.style.transition = 'none';
+    note.style.left = spot.x + 'px';
+    note.style.top = spot.y + 'px';
+    if (!note.dataset.placed) { void note.offsetWidth; note.style.transition = ''; note.dataset.placed = '1'; }
+    // 화살표: 쪽지의 마주 보는 변 가운데 → 동그라미의 마주 보는 변 가운데, 살짝 휘게
+    const from = {
+      right: [spot.x, spot.y + nh / 2], left: [spot.x + nw, spot.y + nh / 2],
+      below: [spot.x + nw / 2, spot.y], above: [spot.x + nw / 2, spot.y + nh]
+    }[spot.side];
+    const to = {
+      right: [ring.x + ring.w + 6, cy], left: [ring.x - 6, cy],
+      below: [cx, ring.y + ring.h + 6], above: [cx, ring.y - 6]
+    }[spot.side];
+    const horiz = spot.side === 'right' || spot.side === 'left';
+    const ctrl = horiz ? [(from[0] + to[0]) / 2, from[1] + (to[1] - from[1]) * 0.1 - 26] : [from[0] + (to[0] - from[0]) * 0.1 + 26, (from[1] + to[1]) / 2];
+    const R = Math.min(14, ring.h / 2);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML =
+      '<defs><mask id="tourMask"><rect width="' + W + '" height="' + H + '" fill="white"/>'
+      + '<rect x="' + ring.x + '" y="' + ring.y + '" width="' + ring.w + '" height="' + ring.h + '" rx="' + R + '" fill="black"/></mask>'
+      + '<marker id="tourHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#FFF3A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>'
+      + '<rect class="tour-dim" width="' + W + '" height="' + H + '" mask="url(#tourMask)"/>'
+      + '<rect class="tour-ring" x="' + ring.x + '" y="' + ring.y + '" width="' + ring.w + '" height="' + ring.h + '" rx="' + R + '"/>'
+      + '<path class="tour-arrow" d="M' + from + ' Q' + ctrl + ' ' + to + '" marker-end="url(#tourHead)"/>';
+  }
+
+  document.getElementById('tourNext').addEventListener('click', () => {
+    if (tourAt === TOUR.length - 1) { closeTour(); return; }
+    tourAt++; showTourStep();
+  });
+  document.getElementById('tourPrev').addEventListener('click', () => { if (tourAt > 0) { tourAt--; showTourStep(); } });
+  document.getElementById('tourSkip').addEventListener('click', closeTour);
+  window.addEventListener('resize', () => requestAnimationFrame(placeTour));
+  document.getElementById('helpOpen').addEventListener('click', openTour);
   function helpSeen() {
-    try { return !!localStorage.getItem(HELP_SEEN_KEY); } catch (e) { return true; }
+    try { return (parseInt(localStorage.getItem(HELP_SEEN_KEY), 10) || 0) >= TOUR_VERSION; } catch (e) { return true; }
   }
 
   // 시작 화면 설명: 손글씨가 다 써진 뒤(1.5초) 한 글자씩 입력되듯 나타난다
@@ -3031,7 +3101,7 @@
     setTimeout(() => checkForUpdate(false), 1200);
     setTimeout(() => {
       splash.remove();
-      if (!helpSeen()) openHelp();
+      if (!helpSeen()) openTour();
     }, 650);
   };
   splash.addEventListener('click', closeSplash);
