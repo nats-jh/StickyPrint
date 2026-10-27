@@ -690,6 +690,20 @@
   .paper > :not(img) { position: relative; z-index: 1; }
   .paper img.float { position: absolute; cursor: move; }
   .paper img.float.picked { z-index: 3 !important; }
+  /* 고른 사진의 네 모서리 회전 손잡이. 내용(.paper) 밖 칸 위에 겹쳐 두므로 저장되지 않는다 */
+  .img-rot { position: absolute; z-index: 5; pointer-events: none; }
+  .img-rot b {
+    position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; pointer-events: auto;
+    background: #fff; border: 2px solid #4c9aff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .12s;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.6-5.9' stroke='%23fff' stroke-width='4.5'/%3E%3Cpath d='M20 4v5h-5' stroke='%23fff' stroke-width='4.5'/%3E%3Cpath d='M20 12a8 8 0 1 1-2.6-5.9' stroke='%231f2328' stroke-width='2'/%3E%3Cpath d='M20 4v5h-5' stroke='%231f2328' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E") 12 12, grab;
+  }
+  .img-rot b:hover, .img-rot.turning b { transform: scale(1.25); background: #4c9aff; }
+  .img-rot .deg {
+    position: absolute; left: 50%; top: -30px; transform: translateX(-50%); padding: 2px 7px; border-radius: 999px;
+    background: #1f2328; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; display: none;
+  }
+  .img-rot.turning .deg { display: block; }
+  body:not(.m-preview) .img-rot { display: none; }
   /* 그리기 층: 칸 전체를 덮는 투명 SVG. 좌표는 칸 기준 0~100 */
   .paper > svg.draw { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
   body.drawing .paper { cursor: crosshair; }
@@ -727,6 +741,7 @@
     body.m-content .slot.empty, body.m-preview .slot.empty { display: none; }
     .slot.empty .frame { border-color: #000; }
     .slot.sel .frame, .paper img.picked { outline: none; }
+    .img-rot { display: none !important; }
     .slot.over .frame { border: 0.3mm dashed #000; }
     body.m-content .slot.over .frame { visibility: hidden; }
   }
@@ -1517,6 +1532,7 @@
     if (imgHere) size.value = parseInt(pickedImg.style.width, 10) || 100;
     document.getElementById('imgSizeVal').textContent = imgHere ? size.value + '%' : '';
     document.body.classList.toggle('img-picked', imgHere);
+    syncImgRot();
     const mode = document.getElementById('imgMode');
     const alpha = document.getElementById('imgAlpha');
     mode.disabled = alpha.disabled = !imgHere;
@@ -1716,7 +1732,7 @@
         }
         const imgs = paper.querySelectorAll('img');
         pickImage(Array.from(imgs).find(el => el.getAttribute('src') === src) || null);
-        flash('사진을 넣었습니다. 옆의 크기 막대로 조절하세요');
+        flash('사진을 넣었습니다. 크기 막대로 조절하고, 모서리를 끌면 돌릴 수 있어요');
       };
       img.onerror = () => alert('사진 파일을 열지 못했습니다.');
       img.src = reader.result;
@@ -1731,10 +1747,79 @@
     renderPanel();
   }
 
+  // ---------- 사진 돌리기: 고른 사진의 모서리 손잡이를 끌어서 ----------
+  // 각도는 사진의 style.transform 에 rotate 로 저장해 인쇄에도 그대로 나온다. 0, 90 도 근처는 붙고, Shift 는 15 도씩
+  const ROT_SNAP = 4, ROT_STEP = 15;
+  const imgRot = document.createElement('div');
+  imgRot.className = 'img-rot';
+  imgRot.innerHTML = '<b data-c="tl"></b><b data-c="tr" style="left:100%"></b><b data-c="br" style="left:100%;top:100%"></b><b data-c="bl" style="top:100%"></b><span class="deg"></span>';
+  imgRot.title = '끌어서 돌리기 (Shift: 15도씩, 두 번 클릭: 바로 세우기)';
+  const rotOf = img => parseFloat((img.style.transform.match(/rotate\((-?[\d.]+)deg\)/) || [])[1]) || 0;
+  function setRot(img, deg) {
+    const d = Math.round(((deg % 360) + 540) % 360 - 180);   // -180 ~ 180
+    img.style.transform = d ? 'rotate(' + d + 'deg)' : '';
+    if (!img.getAttribute('style')) img.removeAttribute('style');
+    return d;
+  }
+  // 손잡이 틀을 고른 사진 위에 맞춘다 (사진과 같은 크기, 같은 각도)
+  function syncImgRot() {
+    const img = pickedImg;
+    const paper = img && img.closest('.paper');
+    if (!img || !paper || !img.isConnected) { imgRot.remove(); return; }
+    const slot = paper.parentElement;
+    if (imgRot.parentElement !== slot) slot.appendChild(imgRot);
+    // 사진 가운데(돌려도 그대로)를 칸 기준 좌표로 바꾸고, 돌리기 전 크기로 틀을 놓는다. 화면 배율(zoom)은 칸의 실제 크기로 나눠 맞춘다
+    const sr = slot.getBoundingClientRect(), k = sr.width / slot.offsetWidth || 1, c = img.getBoundingClientRect();
+    const x = (c.left + c.width / 2 - sr.left) / k - img.offsetWidth / 2;
+    const y = (c.top + c.height / 2 - sr.top) / k - img.offsetHeight / 2;
+    Object.assign(imgRot.style, {
+      left: x + 'px', top: y + 'px',
+      width: img.offsetWidth + 'px', height: img.offsetHeight + 'px',
+      transform: img.style.transform || ''
+    });
+    imgRot.querySelector('.deg').style.transform = 'translateX(-50%) rotate(' + (-rotOf(img)) + 'deg)';
+  }
+  imgRot.addEventListener('mousedown', e => {
+    if (!e.target.dataset.c || !pickedImg || e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const img = pickedImg, i = sel;
+    const c = img.getBoundingClientRect();
+    const cx = c.left + c.width / 2, cy = c.top + c.height / 2;
+    const a0 = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI, r0 = rotOf(img);
+    const deg = imgRot.querySelector('.deg');
+    let moved = false;
+    imgRot.classList.add('turning');
+    deg.textContent = r0 + '°';
+    const onMove = ev => {
+      moved = true;
+      let r = r0 + Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI - a0;
+      if (ev.shiftKey) r = Math.round(r / ROT_STEP) * ROT_STEP;
+      else { const q = Math.round(r / 90) * 90; if (Math.abs(r - q) < ROT_SNAP) r = q; }
+      deg.textContent = setRot(img, r) + '°';
+      syncImgRot();
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      imgRot.classList.remove('turning');
+      if (moved) onEdit(i, getHtml(i), false);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+  imgRot.addEventListener('dblclick', e => {
+    if (!e.target.dataset.c || !pickedImg) return;
+    setRot(pickedImg, 0);
+    syncImgRot();
+    onEdit(sel, getHtml(sel), false);
+  });
+
   function resizePicked(percent) {
     pickedImg.style.width = percent + '%';
     document.getElementById('imgSizeVal').textContent = percent + '%';
     onEdit(sel, getHtml(sel), true);
+    syncImgRot();
   }
 
   const imageMode = img => (!img.classList.contains('float') ? 'inline'
@@ -1792,6 +1877,7 @@
       moved = true;
       img.style.left = clampPct(startLeft + (ev.clientX - startX) / pr.width * 100) + '%';
       img.style.top = clampPct(startTop + (ev.clientY - startY) / pr.height * 100) + '%';
+      syncImgRot();
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
@@ -3628,6 +3714,85 @@
     try { return (parseInt(localStorage.getItem(HELP_SEEN_KEY), 10) || 0) >= TOUR_VERSION; } catch (e) { return true; }
   }
 
+  // 시작 화면 소리: 펜이 종이를 긁는 소리(슥슥)와 타이핑 소리. 파일 없이 잡음을 걸러서 만든다. 소리를 못 내는 환경이면 조용히 넘어간다
+  const splashSound = (() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+    let ctx;
+    try { ctx = new AC(); } catch (e) { return null; }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const master = ctx.createGain();
+    master.gain.value = 0.35;   // 은은하게 (사무실에서도 거슬리지 않게)
+    master.connect(ctx.destination);
+    const noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const ch = noise.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    // 잡음을 걸러서 소리 한 덩어리. grain 을 주면 크기가 자잘하게 떨려 종이를 긁는 느낌이 난다
+    const burst = (at, dur, { freq, q, gain, attack, release, type = 'bandpass', grain = 0 }) => {
+      const src = ctx.createBufferSource();
+      src.buffer = noise;
+      src.loop = true;
+      src.playbackRate.value = 0.8 + Math.random() * 0.4;
+      const f = ctx.createBiquadFilter();
+      f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, at);
+      g.gain.linearRampToValueAtTime(gain, at + attack);
+      g.gain.setValueAtTime(gain, Math.max(at + attack, at + dur - release));
+      g.gain.linearRampToValueAtTime(0, at + dur);
+      src.connect(f); f.connect(g); g.connect(master);
+      src.start(at, Math.random() * 0.5);
+      src.stop(at + dur + 0.02);
+      if (grain) {
+        const m = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), mg = ctx.createGain();
+        m.buffer = noise; m.loop = true;
+        lp.type = 'lowpass'; lp.frequency.value = 45;
+        mg.gain.value = gain * grain * 6;
+        m.connect(lp); lp.connect(mg); mg.connect(g.gain);
+        m.start(at, Math.random() * 0.5);
+        m.stop(at + dur);
+      }
+    };
+    // 획 하나: 길이만큼 사각사각, 점은 콕
+    const play = (at, dur, dot) => {
+      if (dot) { burst(at, 0.05, { freq: 2600, q: 1.2, gain: 0.9, attack: 0.004, release: 0.035 }); return; }
+      const d = Math.max(dur, 0.04), rise = Math.min(0.02, d / 3), fall = Math.min(0.03, d / 3);
+      burst(at, d, { freq: 3400 + Math.random() * 800, q: 0.9, gain: 0.3 + Math.random() * 0.08, attack: rise, release: fall, grain: 0.5 });
+      burst(at, d, { freq: 1500, q: 1.1, gain: 0.12, attack: rise, release: fall });   // 종이 울림
+    };
+    // 글씨 그리기와 같은 시계(t0)로 맞춘다. 소리 장치가 늦게 준비돼도 뒤로 밀리지 않고, 이미 지난 획은 건너뛴다
+    const t0 = performance.now(), queue = [];
+    const flush = () => {
+      // 스피커까지 걸리는 시간만큼 먼저 내보내 글씨가 적히는 순간에 들리게 한다
+      const passed = (performance.now() - t0) / 1000 + (ctx.outputLatency || ctx.baseLatency || 0);
+      queue.splice(0).forEach(([delay, dur, dot]) => {
+        const rel = delay - passed;
+        if (rel + dur <= 0.02) return;
+        play(ctx.currentTime + Math.max(rel, 0), dur - Math.max(0, -rel), dot);
+      });
+    };
+    ctx.addEventListener('statechange', () => { if (ctx.state === 'running') flush(); });
+    return {
+      pen(delay, dur, dot) {
+        queue.push([delay, dur, dot]);
+        if (ctx.state === 'running') flush();
+      },
+      // 글자 하나: 짧은 딸깍
+      key() {
+        const at = ctx.currentTime;
+        burst(at, 0.03, { freq: 4200 + Math.random() * 1200, q: 0.8, gain: 0.3, attack: 0.002, release: 0.025, type: 'highpass' });
+        burst(at, 0.02, { freq: 1800, q: 1.5, gain: 0.5, attack: 0.001, release: 0.018 });   // 키가 닿는 딸깍
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = 140 + Math.random() * 40;
+        g.gain.setValueAtTime(0.25, at);
+        g.gain.exponentialRampToValueAtTime(0.001, at + 0.04);
+        o.connect(g); g.connect(master);
+        o.start(at); o.stop(at + 0.05);
+      },
+      stop() { master.gain.setTargetAtTime(0, ctx.currentTime, 0.05); setTimeout(() => ctx.close().catch(() => {}), 400); }
+    };
+  })();
+
   // 시작 화면 로고: 획 순서대로 펜이 지나가듯 드러난다. 이름 1.3초, 이어서 서명 0.5초
   const WM_START = 0.45, WM_NAME = 1.3, WM_SIGN = 0.5, WM_TAP = 0.08;
   (function writeWordmark() {
@@ -3660,6 +3825,7 @@
         path.setAttribute('stroke-width', D.width);
         path.style.animationDuration = dur.toFixed(3) + 's';
         path.style.animationDelay = at.toFixed(3) + 's';
+        if (splashSound) splashSound.pen(at, dur, dot);
         mask.appendChild(path);
         at += dur;
       });
@@ -3675,7 +3841,7 @@
     img.replaceWith(svg);
   })();
 
-  // 시작 화면 설명: 손글씨가 다 써진 뒤(2초) 한 글자씩 입력되듯 나타난다
+  // 시작 화면 설명: 손글씨와 서명이 다 써지고(2.3초) 잠깐 쉰 뒤(2.7초) 한 글자씩 입력되듯 나타난다
   (function typeSplashSub() {
     const el = document.getElementById('splashSub');
     if (!el) return;
@@ -3687,9 +3853,10 @@
     setTimeout(function tick() {
       el.textContent = text.slice(0, ++n);
       el.appendChild(caret);
+      if (splashSound && text[n - 1] !== ' ') splashSound.key();
       if (n < text.length) setTimeout(tick, 75);
       else setTimeout(() => caret.remove(), 900);
-    }, 2000);
+    }, 2700);
   })();
 
   // 시작 화면: 잠깐 보여 주고 사라진다. 클릭하면 바로 닫힌다
@@ -3698,6 +3865,7 @@
     if (!document.getElementById('splash') || splash.classList.contains('hide')) return;
     splash.classList.add('hide');
     document.body.classList.add('ready');
+    if (splashSound) splashSound.stop();   // 클릭해서 일찍 닫아도 소리가 남지 않게
     setTimeout(() => checkForUpdate(false), 1200);
     setTimeout(() => {
       splash.remove();
@@ -3705,7 +3873,7 @@
     }, 650);
   };
   splash.addEventListener('click', closeSplash);
-  setTimeout(closeSplash, 4200);   // 손글씨(약 2.3초) → 설명 타이핑(약 0.8초) → 1.1초쯤 머문다
+  setTimeout(closeSplash, 4600);   // 손글씨(약 2.3초) → 쉼(0.4초) → 설명 타이핑(약 0.7초) → 1.2초쯤 머문다
 </script>
 </body>
 </html>

@@ -18,7 +18,8 @@
         "minWidth": 1100,
         "minHeight": 700,
         "center": true,
-        "resizable": true
+        "resizable": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
       }
     ],
     "security": {
