@@ -1,6 +1,6 @@
 [package]
 name = "stickyprint"
-version = "1.0.1"
+version = "1.0.2"
 description = "StickyPrint - 포스트잇 인쇄 도우미"
 authors = ["kangjoonhyuk"]
 license = "MIT"
