@@ -147,6 +147,7 @@
   .ms-card { width: min(1240px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 20px 22px 18px; display: flex; flex-direction: column; gap: 14px; }
   .ms-top { display: flex; align-items: flex-start; gap: 12px; }
   .ms-top h3 { margin: 0; font-size: 17px; }
+  .ms-why { color: #f5c842; font-weight: 600; }
   .ms-top p { margin: 3px 0 0; font-size: 12.5px; color: #9aa4af; line-height: 1.55; }
   .ms-top .modal-x { margin-left: auto; flex: none; }
   .ms-stage {
@@ -217,7 +218,6 @@
   .btns .print-btn.measure-card:hover { background: rgba(245, 200, 66, .18); border-color: #f5c842; }
   .print-btn .pi img { width: 18px; height: 18px; display: block; }
   .measure-card .ms-now { margin-left: auto; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #f5c842; background: rgba(245, 200, 66, .12); }
-  .preset-label { display: block; margin-bottom: 4px; font-size: 11px; color: #8b95a1; }
   .modal-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; cursor: pointer; display: grid; place-items: center; }
   .modal-x:hover { background: #353c44; color: #fff; }
   .modal-x svg { width: 16px; height: 16px; }
@@ -287,11 +287,6 @@
   .btns button.on { border-color: #4c9aff; background: #22344d; }
   aside button:disabled { opacity: .35; cursor: default; background: #2b3138; }
 
-  .preset {
-    flex: 1; min-width: 0; padding: 5px; background: #14171a; color: #fff;
-    border: 1px solid #3a4048; border-radius: 4px; font-size: 13px;
-  }
-  .preset { width: 100%; margin-bottom: 6px; padding: 6px; }
   .size-acts { margin-bottom: 10px; }
   .size-acts .small-btn { margin-top: 0; }
   aside .small-btn:disabled { opacity: .35; cursor: default; }
@@ -704,10 +699,10 @@
     <div class="ms-top">
       <div class="pd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5L15.5 3l5.5 5.5L8.5 21z"/><path d="M7 11.5l2 2M10 8.5l2 2M13 5.5l2 2"/></svg></div>
       <div>
-        <h3 id="msTitle"><span class="only-note">포스트잇을 화면에 대 보고 고르기</span><span class="only-custom">직접 맞추기</span><span class="only-screen">화면 크기 맞추기 (처음 한 번)</span></h3>
+        <h3 id="msTitle"><span class="only-note">포스트잇을 화면에 대 보고 고르기</span><span class="only-custom">직접 맞추기</span><span class="only-screen">화면 크기 맞추기</span></h3>
         <p class="only-note">아래 종이들은 실제 크기입니다. 가진 포스트잇을 하나씩 대 보고 딱 맞는 것을 누른 뒤 "이 크기로 쓰기".</p>
         <p class="only-custom">맞는 크기가 없으면 포스트잇을 화면의 종이에 대고, 파란 손잡이를 끌어 실물과 똑같이 맞추세요.</p>
-        <p class="only-screen">모니터마다 1mm 가 다르게 보여서 한 번 맞춰야 합니다. 신용카드나 신분증(모두 같은 크기)을 화면의 카드 위에 대고, 손잡이나 막대로 크기를 똑같이 맞추세요.</p>
+        <p class="only-screen"><b class="ms-why" id="msWhy"></b> 신용카드나 신분증(모두 같은 크기)을 화면의 카드 위에 대고, 손잡이나 막대로 크기를 똑같이 맞추세요.</p>
       </div>
       <button class="modal-x" id="msClose" title="닫기 (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
@@ -808,8 +803,6 @@
   <details class="sec">
   <summary><h2>포스트잇 크기와 위치<span class="h2-sub" id="sizeSummary">단위 mm</span></h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary>
   <div class="sec-body">
-  <span class="preset-label">포스트잇이 없으면 목록에서 고르기</span>
-  <select class="preset" id="preset"></select>
   <div class="row2 size-acts">
     <button class="small-btn" id="sizeSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>지금 크기 저장</span></button>
     <button class="small-btn" id="sizeDelete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span>내 포스트잇 삭제</span></button>
@@ -1397,21 +1390,6 @@
   }
   let customSizes = loadSizes();
 
-  // 크기 목록: 기본 크기(값 0~) + 내 포스트잇(값 c0~) + 직접 입력
-  function renderPresetOptions() {
-    const opt = (v, label) => '<option value="' + v + '">' + label + '</option>';
-    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    presetSel.innerHTML = '<optgroup label="기본 크기">' + PRESETS.map((p, i) => opt(i, p.name)).join('') + '</optgroup>'
-      + (customSizes.length ? '<optgroup label="내 포스트잇">'
-        + customSizes.map((p, i) => opt('c' + i, esc(p.name) + ' ' + p.w + '×' + p.h)).join('') + '</optgroup>' : '')
-      + opt('custom', '직접 입력');
-  }
-
-  function sizeOf(value) {
-    if (value === 'custom') return null;
-    return value[0] === 'c' ? customSizes[+value.slice(1)] : PRESETS[+value];
-  }
-
   function syncSizeSummary() {
     const el = document.getElementById('sizeSummary');
     if (el) el.textContent = '지금 ' + state.w + ' × ' + state.h + ' mm';
@@ -1422,9 +1400,6 @@
     syncSizeSummary();
     const c = customSizes.findIndex(p => p.w === state.w && p.h === state.h);
     document.getElementById('sizeDelete').disabled = c < 0;
-    if (c >= 0) { document.getElementById('preset').value = 'c' + c; return; }
-    const i = PRESETS.findIndex(p => p.w === state.w && p.h === state.h);
-    document.getElementById('preset').value = i < 0 ? 'custom' : String(i);
   }
 
   // 글자가 포스트잇 밖으로 넘치면 빨간 테두리 + 경고
@@ -2011,17 +1986,6 @@
     });
   });
 
-  const presetSel = document.getElementById('preset');
-  renderPresetOptions();
-  presetSel.addEventListener('change', () => {
-    const p = sizeOf(presetSel.value);
-    if (!p) return;
-    state = { ...state, w: p.w, h: p.h };
-    document.getElementById('w').value = p.w;
-    document.getElementById('h').value = p.h;
-    saveState(); render();
-  });
-
   function saveSizes(next) {
     try {
       localStorage.setItem(SIZES_KEY, JSON.stringify(next));
@@ -2044,7 +2008,7 @@
     const item = { name: name, w: w, h: h };
     const next = same >= 0 ? customSizes.map((p, i) => (i === same ? item : p)) : customSizes.concat([item]);
     if (!saveSizes(next)) return;
-    renderPresetOptions(); syncPreset();
+    syncPreset();
     flash('"' + name + '" 크기를 저장했습니다. 크기 목록의 내 포스트잇에서 고르세요');
   });
 
@@ -2053,7 +2017,7 @@
     if (i < 0) return;
     if (!confirm('"' + customSizes[i].name + '" 크기를 목록에서 지울까요?')) return;
     if (!saveSizes(customSizes.filter((_, k) => k !== i))) return;
-    renderPresetOptions(); syncPreset();
+    syncPreset();
     flash('목록에서 지웠습니다');
   });
 
@@ -2809,8 +2773,15 @@
     if (measureDlg.dataset.step === 'note') showNoteStep(); else drawMeasure();
   }
 
+  // 카드로 맞추는 이유: 모니터가 실제 크기를 알려 주지 않았거나, 사용자가 직접 다시 맞추려는 것
+  const SCREEN_WHY = {
+    '': '이 모니터는 실제 크기 정보를 읽을 수 없어서 자동으로 맞추지 못했어요. 이 모니터에서 한 번만 맞추면 됩니다.',
+    auto: '모니터 정보로 자동으로 맞춰져 있어요. 실물과 크기가 다를 때만 다시 맞추세요.',
+    card: '이 모니터는 전에 카드로 맞춘 크기를 쓰고 있어요. 다시 맞추면 새 값으로 바뀝니다.'
+  };
   function showScreenStep() {
     measureDlg.dataset.step = 'screen';
+    document.getElementById('msWhy').textContent = SCREEN_WHY[msScreen.source] || SCREEN_WHY[''];
     if (!msPx) msPx = msScreen.px || CSS_PX_PER_MM;
     msScale.value = Math.round(msPx * 100);
     drawMeasure();
@@ -2981,7 +2952,7 @@
     Object.keys(history).forEach(k => delete history[k]);
     undoOrder = []; redoOrder = [];
     ['w', 'h', 'mx', 'my', 'gap'].forEach(k => { document.getElementById(k).value = state[k]; });
-    renderPresetOptions(); syncPreset();
+    syncPreset();
     render();
     flash('다른 창에서 바뀐 내용을 불러왔습니다');
   });
@@ -3052,10 +3023,10 @@
   const UPDATE_EVERY_MS = 6 * 60 * 60 * 1000;
   const updCard = document.getElementById('updCard');
   let lastUpdateCheck = 0, dismissedVersion = null, installing = false;
-  // 버전을 올리지 않은 긴급 패치는 "1.0.2+1" 처럼 오고, 화면에는 "v1.0.2 (패치 1)" 로 보여 준다
+  // 버전을 올리지 않은 긴급 패치는 "1.0.2+1" 처럼 오고, 화면에는 "v1.0.2.1" 로 보여 준다
   function showVersion(v) {
     const [core, patch] = String(v).split('+');
-    return 'v' + core + (patch ? ' (패치 ' + patch + ')' : '');
+    return 'v' + core + (patch ? '.' + patch : '');
   }
   async function checkForUpdate(manual) {
     const tauri = window.__TAURI__;
@@ -3067,7 +3038,7 @@
       if (!info) { if (manual) flash('지금 최신 버전입니다'); return; }
       if (!manual && info.version === dismissedVersion) return;
       updCard.dataset.version = info.version;
-      document.getElementById('updTitle').textContent = '새 버전 ' + showVersion(info.version) + '이 있습니다';
+      document.getElementById('updTitle').textContent = '새 버전이 있습니다 (' + showVersion(info.version) + ')';
       document.getElementById('updNotes').textContent = info.notes || '';
       updCard.classList.add('show');
     } catch (e) {

@@ -10,9 +10,9 @@ const RELEASE_REPO = 'nats-jh/StickyPrint';
 const root = new URL('../', import.meta.url);
 const conf = JSON.parse(readFileSync(new URL('src-tauri/tauri.conf.json', root), 'utf8'));
 const version = conf.version;
-// 1.0.2+1 → 태그 v1.0.2-patch1, 파일 StickyPrint_1.0.2-patch1_x64-setup.exe (+ 는 주소에서 말썽이라 바꿔 올린다)
+// 1.0.2+2 → 태그 v1.0.2.2, 파일 StickyPrint_1.0.2.2_x64-setup.exe (+ 는 주소에서 말썽이라 바꿔 올린다)
 const [core, patchNo] = version.split('+');
-const label = patchNo ? `${core}-patch${patchNo}` : core;
+const label = patchNo ? `${core}.${patchNo}` : core;
 const tag = 'v' + label;
 const notes = process.argv.slice(2).join(' ').trim() || 'StickyPrint ' + version;
 
@@ -53,6 +53,6 @@ writeFileSync(latestPath, JSON.stringify(latest, null, 2));
 
 const toPath = u => decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1');
 const r = gh(['release', 'create', tag, toPath(setup), toPath(latestPath),
-  '--repo', RELEASE_REPO, '--title', 'StickyPrint ' + core + (patchNo ? ' 패치 ' + patchNo : ''), '--notes', notes], { stdio: 'inherit' });
+  '--repo', RELEASE_REPO, '--title', 'StickyPrint ' + label, '--notes', notes], { stdio: 'inherit' });
 if (r.status !== 0) process.exit(r.status || 1);
 console.log(`\n배포 완료: https://github.com/${RELEASE_REPO}/releases/tag/${tag}`);
