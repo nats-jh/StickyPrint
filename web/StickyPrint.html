@@ -371,6 +371,12 @@
   .tp-grid span { width: 18px; height: 18px; border: 1px solid #4a525c; border-radius: 3px; background: #2e343b; cursor: pointer; transition: background .08s, border-color .08s; }
   .tp-grid span.on { background: #22344d; border-color: #4c9aff; }
   .tp-size { margin-top: 8px; font-size: 12px; color: #b8c0c8; text-align: center; white-space: nowrap; }
+  .tb-seg { display: flex; align-items: center; gap: 2px; padding: 2px 2px 2px 8px; border: 1px solid #3a4048; border-radius: 7px; background: #1a1d21; }
+  .seg-lbl { font-size: 12px; font-weight: 700; color: #e6e6e6; margin-right: 4px; }
+  #tableOpts button { gap: 3px; padding: 0 8px; font-size: 12px; white-space: nowrap; }
+  #tableOpts .tb-seg button { height: 26px; }
+  #tableOpts button svg { width: 13px; height: 13px; }
+  #tableOpts button.danger:hover:not(:disabled) { border-color: #e5484d; background: #3a1f22; color: #ffb4b6; }
   body.in-table #tableOpts { display: flex; animation: ctx-in .16s ease-out; }
   .imgctl { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #b8c0c8; white-space: nowrap; }
   .imgctl input[type=range] { width: 90px; }
@@ -546,7 +552,7 @@
         종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.</p>
 
       <div class="cards">
-        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 표, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 표 안에서는 Tab 으로 다음 칸으로 갑니다. 글자를 드래그한 뒤 누르세요.</p></div>
+        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 표, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 표 안을 클릭하면 행, 열 추가와 삭제 버튼이 나오고, Tab 으로 다음 칸으로 갑니다. 글자를 드래그한 뒤 누르세요.</p></div>
         <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다. 지우개는 도형을 클릭. Esc로 끝냅니다.</p></div>
         <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 고르고, 배경이나 앞에 띄운 사진은 끌어서 옮깁니다.</p></div>
         <div><h4>템플릿 저장</h4><p>고친 칸은 이름표에 노란 점이 생깁니다. 저장하면 그 템플릿에, 사본 저장은 새 템플릿으로 남습니다. 다른 PC로는 내보내기 → 가져오기.</p></div>
@@ -708,11 +714,9 @@
       <div class="tpick" id="tablePick"></div>
       </span>
       <span class="ctx" id="tableOpts">
-      <button data-tbl="row" title="아래에 줄 추가 (마지막 칸에서 Tab 도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="8" rx="1.2"/><path d="M12 15v6M9 18h6"/></svg></button>
-      <button data-tbl="col" title="오른쪽에 칸 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="16" rx="1.2"/><path d="M15 12h6M18 9v6"/></svg></button>
-      <button data-tbl="delRow" title="이 줄 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="8" rx="1.2"/><path d="M10 16l4 4M14 16l-4 4"/></svg></button>
-      <button data-tbl="delCol" title="이 칸(세로줄) 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="16" rx="1.2"/><path d="M16 10l4 4M20 10l-4 4"/></svg></button>
-      <button data-tbl="delTable" title="표 통째로 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+      <span class="tb-seg" title="행 (가로줄)"><span class="seg-lbl">행</span><button data-tbl="row" title="아래에 행 추가 (마지막 칸에서 Tab 도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> 추가</button><button data-tbl="delRow" class="danger" title="이 행 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg> 삭제</button></span>
+      <span class="tb-seg" title="열 (세로줄)"><span class="seg-lbl">열</span><button data-tbl="col" title="오른쪽에 열 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> 추가</button><button data-tbl="delCol" class="danger" title="이 열 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg> 삭제</button></span>
+      <button data-tbl="delTable" class="danger" title="표 통째로 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg> 표 삭제</button>
       </span>
     </div>
     <div class="tb-group" title="정렬. 커서가 있는 줄에 적용됩니다">
@@ -2019,7 +2023,7 @@
     if (!t) return;
     const R = +t.dataset.r, C = +t.dataset.c;
     tableBox.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= R && +x.dataset.c <= C));
-    tableSizeText.textContent = C + '칸 × ' + R + '줄';
+    tableSizeText.textContent = R + '행 × ' + C + '열';
   });
   tableBox.addEventListener('click', e => {
     const t = e.target.closest('[data-r]');
