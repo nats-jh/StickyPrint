@@ -98,8 +98,23 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
     .await
     .map_err(|e| e.to_string())?
     .ok_or("새 버전이 없습니다")?;
-  // Windows 는 설치 단계에서 앱이 닫히고, 설치가 끝나면 새 버전이 다시 켜진다
-  update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+  // 받는 동안 화면에 진행률을 보여 주도록 알린다. 설치는 창 없이(quiet) 진행되고 끝나면 새 버전이 다시 켜진다
+  use tauri::Emitter;
+  let mut got: u64 = 0;
+  let progress = app.clone();
+  let done = app.clone();
+  update
+    .download_and_install(
+      move |chunk, total| {
+        got += chunk as u64;
+        let _ = progress.emit("update-progress", (got, total));
+      },
+      move || {
+        let _ = done.emit("update-installing", ());
+      },
+    )
+    .await
+    .map_err(|e| e.to_string())?;
   app.restart();
 }
 

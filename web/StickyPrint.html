@@ -30,6 +30,10 @@
   .splash-text { animation: sp-in .4s .3s ease-out both; }
   /* 손글씨가 펜으로 써지듯 왼쪽부터 드러난다 */
   .splash-text .wordmark { display: block; height: 104px; width: auto; animation: sp-write 1s .45s cubic-bezier(.45, .05, .35, 1) both; }
+  /* 획 데이터가 있으면 그림을 획 순서대로 드러낸다 (쓰기 전 획은 둥근 펜 끝 점도 보이지 않게 투명) */
+  .splash-text svg.wordmark { animation: none; }
+  .wm-stroke { fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; animation: wm-draw linear both; }
+  @keyframes wm-draw { 0% { stroke-dashoffset: 1; stroke-opacity: 0; } .1% { stroke-opacity: 1; } 100% { stroke-dashoffset: 0; stroke-opacity: 1; } }
   /* 손글씨가 다 써진 뒤 설명이 타이핑하듯 나타난다 (글자는 스크립트가 한 자씩 넣음) */
   .splash-text .splash-sub { margin: 4px 0 0 6px; min-height: 1.4em; }
   .splash-sub .type-caret { display: inline-block; width: 1px; height: 1.05em; margin-left: 2px; vertical-align: -2px; background: #9aa4af; animation: caret-blink .9s steps(1) infinite; }
@@ -49,7 +53,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .splash-in .logo, .splash-text, .splash-text .wordmark, .page { animation: none !important; }
+    .splash-in .logo, .splash-text, .splash-text .wordmark, .page, .wm-stroke, .pokku i, .us-logo, .us-spark { animation: none !important; }
     * { transition: none !important; }
   }
 
@@ -361,7 +365,25 @@
   /* ---------- 포꾸 (칸 테두리 꾸미기) ---------- */
   .deco-sec { margin-top: 12px; padding: 10px 10px 8px; background: #262b31; border: 1px solid #3a4048; border-radius: 8px; }
   .deco-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
-  .deco-logo { height: 30px; width: auto; display: block; margin: -2px 0 -2px -2px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+  .pokku { position: relative; display: block; height: 30px; margin: -2px 0 -2px -2px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+  .pokku > img { height: 100%; width: auto; display: block; }
+  /* 하트와 반짝이는 아이콘에서 떼어 낸 조각. 원래 자리에 겹쳐 두고 움직인다 */
+  .pokku i { position: absolute; display: block; }
+  .pokku i img { width: 100%; height: auto; display: block; }
+  .pokku .heart { left: 71.92%; top: 5.52%; width: 18.14%; transform-origin: 50% 70%; animation: pk-beat 1.6s ease-in-out infinite; }
+  .pokku .spark { left: 86.74%; top: 37.19%; width: 13.26%; animation: pk-twinkle 2.4s ease-in-out .5s infinite; }
+  @keyframes pk-beat {
+    0%, 100% { transform: translateY(0) scale(1) rotate(0); }
+    15% { transform: translateY(-6%) scale(1.18) rotate(-6deg); }
+    30% { transform: translateY(-2%) scale(.96) rotate(3deg); }
+    45% { transform: translateY(-8%) scale(1.12) rotate(-3deg); }
+    65% { transform: translateY(-3%) scale(1) rotate(0); }
+  }
+  @keyframes pk-twinkle {
+    0%, 60%, 100% { transform: scale(1) rotate(0); opacity: 1; }
+    70% { transform: scale(.4) rotate(45deg); opacity: .5; }
+    82% { transform: scale(1.25) rotate(90deg); opacity: 1; }
+  }
   .deco-who { font-size: 11px; color: #8b95a1; white-space: nowrap; }
   .deco-tabs { margin-left: auto; display: flex; padding: 2px; gap: 2px; border-radius: 7px; background: #14171a; border: 1px solid #3a4048; }
   .deco-tabs button { padding: 4px 9px; border: 0; border-radius: 5px; background: none; color: #8b95a1; font-size: 11.5px; font-weight: 600; font-family: inherit; cursor: pointer; }
@@ -387,6 +409,24 @@
   .deco-mini { position: relative; overflow: hidden; border-radius: 1px; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
   .deco-mini.none { display: grid; place-items: center; }
   .deco-mini.none::before { content: ''; position: absolute; inset: 0; border: 0.6mm dashed rgba(0,0,0,.18); }
+  .deco-grid.fold .deco-tile.extra { display: none; }
+  .deco-more {
+    display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 7px; padding: 6px 0;
+    border: 1px dashed #3a4048; border-radius: 7px; background: none; color: #9aa4af; font-size: 11.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .deco-more:hover { border-color: #5a6470; color: #e6e6e6; background: #22272d; }
+  .deco-more .peek { display: flex; margin-right: 2px; }
+  /* 접힌 그림 맛보기: 작은 포스트잇 색 동그라미 안에 (검은 그림도 어두운 바탕에서 보이게) */
+  .deco-more .peek span { display: grid; place-items: center; width: 20px; height: 20px; margin-left: -5px; border-radius: 50%; background: #FFF3A0; box-shadow: 0 0 0 2px #262b31; }
+  .deco-more .peek span:first-child { margin-left: 0; }
+  .deco-more .peek img { max-width: 14px; max-height: 14px; }
+  .deco-more:hover .peek span { box-shadow: 0 0 0 2px #22272d; }
+  .deco-more svg { width: 12px; height: 12px; transition: transform .18s; }
+  .deco-grid:not(.fold) + .deco-more svg { transform: rotate(180deg); }
+  .deco-ink { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 11px; color: #8b95a1; }
+  .deco-ink[hidden] { display: none; }
+  .deco-ink .pd-seg { width: 156px; padding: 2px; border-radius: 7px; }
+  .deco-ink .pd-seg button { display: block; padding: 4px 0; font-size: 11px; text-align: center; border-radius: 5px; }
   .deco-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 20px; }
   .deco-note { flex: 1; min-width: 0; font-size: 11px; color: #8b95a1; line-height: 1.4; }
   .deco-note.warn-ish { color: #e8c96a; }
@@ -426,6 +466,31 @@
     background: #1f2328; color: #e6e6e6; border: 1px solid #3a4048; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.35);
     opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s;
   }
+  /* 업데이트 화면: 기본 설치 창 대신 앱 안에서 진행률을 보여 주고, 끝나면 새 버전이 다시 켜진다 */
+  .upd-screen {
+    position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(17, 19, 22, .82); backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s;
+  }
+  .upd-screen.show { opacity: 1; visibility: visible; }
+  .us-card {
+    width: 340px; padding: 26px 28px 22px; border-radius: 16px; background: #1f2328; border: 1px solid #3a4048; color: #e6e6e6;
+    box-shadow: 0 30px 70px rgba(0,0,0,.5); text-align: center; transform: translateY(8px) scale(.98); transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+  }
+  .upd-screen.show .us-card { transform: none; }
+  .us-art { position: relative; width: 64px; height: 64px; margin: 0 auto 8px; }
+  .us-logo { width: 64px; height: 64px; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35)); animation: us-bob 1.8s ease-in-out infinite; }
+  .us-spark { position: absolute; right: -10px; top: -4px; width: 14px; height: 14px; background: #f5c842;
+    clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); animation: pk-twinkle 1.8s ease-in-out infinite; }
+  @keyframes us-bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+  .us-word { display: block; height: 30px; width: auto; margin: 0 auto 14px; opacity: .9; }
+  .us-card b { display: block; font-size: 15px; margin-bottom: 12px; }
+  .us-bar { position: relative; height: 8px; border-radius: 999px; background: #14171a; border: 1px solid #333a42; overflow: hidden; }
+  .us-bar i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #f5c842, #ffd95e); transition: width .2s ease-out; }
+  /* 크기를 모를 때와 설치 중에는 줄이 흘러간다 */
+  .us-bar.flow i { width: 40% !important; animation: us-flow 1.1s ease-in-out infinite; }
+  @keyframes us-flow { from { left: -40%; } to { left: 100%; } }
+  .us-card p { margin: 9px 0 4px; font-size: 12.5px; color: #aab3bd; font-variant-numeric: tabular-nums; }
+  .us-card small { font-size: 11px; color: #6f7882; }
   .update-card.show { opacity: 1; visibility: visible; transform: none; }
   .uc-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
   .uc-dot { width: 8px; height: 8px; border-radius: 50%; background: #f5c842; flex: none; }
@@ -852,7 +917,7 @@
   </div>
   <div class="deco-sec" id="decoSec">
     <div class="deco-head">
-      <img class="deco-logo" src="data/deco/pokku.png" alt="포꾸" title="선택한 칸의 가장자리를 그림으로 꾸밉니다. 내용 인쇄 때 함께 찍혀요">
+      <span class="pokku" role="img" aria-label="포꾸" title="선택한 칸의 가장자리를 그림으로 꾸밉니다. 내용 인쇄 때 함께 찍혀요"><img src="data/deco/pokku_base.png" alt=""><i class="heart"><img src="data/deco/pokku_heart.png" alt=""></i><i class="spark"><img src="data/deco/pokku_spark.png" alt=""></i></span>
       <span class="deco-who" id="decoWho"></span>
       <div class="deco-tabs" role="tablist">
         <button type="button" role="tab" data-g="bw" title="검정 잉크만 써서 흑백 프린터에서도 또렷해요">흑백용</button>
@@ -860,6 +925,15 @@
       </div>
     </div>
     <div class="deco-grid" id="decoGrid"></div>
+    <button type="button" class="deco-more" id="decoMore"></button>
+    <div class="deco-ink" id="decoInkRow" title="흑백용 그림이 글자와 겹쳐 보이지 않게 연하게 찍을 수 있어요">
+      <span>흑백 그림 진하기</span>
+      <div class="pd-seg" id="decoInk" role="radiogroup" aria-label="흑백 그림 진하기">
+        <button type="button" role="radio" data-ink="black">검정</button>
+        <button type="button" role="radio" data-ink="gray">회색</button>
+        <button type="button" role="radio" data-ink="light">연회색</button>
+      </div>
+    </div>
     <div class="deco-foot">
       <span class="deco-note" id="decoNote"></span>
       <button class="small-btn" id="decoAll" title="지금 고른 꾸미기를 모든 칸에 똑같이">모든 칸에</button>
@@ -970,6 +1044,16 @@
     <input type="file" id="imgFile" accept="image/*" hidden>
   </div>
   <div class="toast" id="toast"></div>
+  <div class="upd-screen" id="updScreen" aria-hidden="true" aria-live="polite">
+    <div class="us-card">
+      <div class="us-art"><img class="us-logo" src="data/logo.png" alt=""><span class="us-spark"></span></div>
+      <img class="us-word" src="data/wordmark_name.png" alt="StickyPrint">
+      <b id="usTitle">새 버전을 받는 중</b>
+      <div class="us-bar" id="usBar"><i id="usFill"></i></div>
+      <p id="usText">준비하는 중…</p>
+      <small>설정과 템플릿은 그대로 남아요</small>
+    </div>
+  </div>
   <div class="update-card" id="updCard" aria-live="polite">
     <div class="uc-head"><span class="uc-dot"></span><b id="updTitle">새 버전이 있습니다</b></div>
     <p id="updNotes"></p>
@@ -998,6 +1082,7 @@
   }
 </script>
 <script src="data/템플릿.txt"></script>
+<script src="data/wordmark_strokes.js"></script>
 <script>
   // 설치 프로그램(Tauri)에서만: 화면 저장소가 비어 있는데 파일 백업이 있으면 되살리고 다시 연다.
   // 업데이트·정리로 저장소가 비어도 템플릿과 설정이 남게 하려는 것. 브라우저로 열 때는 아무 일도 안 한다.
@@ -1246,6 +1331,7 @@
         const deco = decoOf(i);
         if (deco) {
           const layer = decoLayer(deco, state.w, state.h);
+          layer.el.style.opacity = inkOf(deco);
           slot.appendChild(layer.el);
           paper.style.padding = layer.pad.map(v => v.toFixed(1) + 'mm').join(' ');
         }
@@ -2589,6 +2675,10 @@
     { id: 'magic', group: 'color', name: '마법학교', ring: ['wizhat', 'wand', 'potion', 'book'], s: 6.5, corner: { m: 'owl', s: 15 } }
   ];
   const DECO_EDGE = 1.2;   // 포스트잇 끝에서 그림까지 (mm)
+  // 흑백용 그림의 진하기 (투명도). 검정 그대로면 글자와 섞여 보여서 기본은 회색
+  const DECO_INK = { black: 1, gray: .5, light: .3 };
+  const decoInk = () => (DECO_INK[state.decoInk] ? state.decoInk : 'gray');
+  const inkOf = d => (d && d.group === 'bw' ? DECO_INK[decoInk()] : 1);
   const decoOf = i => (i >= 0 && slotTpl(i) && DECOS.find(d => d.id === (state.decos || {})[i])) || null;
 
   function decoImg(key, cx, cy, size, rot) {
@@ -2684,7 +2774,8 @@
 
   // 고르는 곳: 지금 포스트잇 크기와 색으로 작게 그린 미리보기. 크기, 색, 탭이 바뀔 때만 다시 그린다
   const MM_PX = 96 / 25.4, DECO_THUMB_PX = 64;
-  let decoTab = null, decoBuilt = '';
+  let decoTab = null, decoBuilt = '', decoOpen = false;
+  const DECO_SHOWN = 6;   // 접었을 때 보이는 칸 (없음 포함 두 줄)
   function decoThumb(d) {
     const W = state.w, H = state.h;
     const mini = document.createElement('div');
@@ -2693,6 +2784,7 @@
     mini.style.zoom = String(DECO_THUMB_PX / (Math.max(W, H) * MM_PX));
     if (d) {
       const layer = decoLayer(d, W, H).el;
+      layer.style.opacity = inkOf(d);
       // 작게 줄이면 점선이 안 보여서 미리보기에서만 굵고 길게
       layer.querySelectorAll('rect, path').forEach(r => {
         const x = (a, k) => r.setAttribute(a, String(r.getAttribute(a)).split(' ').map(v => parseFloat(v) * k).join(' '));
@@ -2706,15 +2798,15 @@
     const cur = decoOf(sel);
     const usable = sel >= 0 && !!slotTpl(sel);
     if (!decoTab) decoTab = state.printGray === false ? 'color' : 'bw';
-    const key = [decoTab, state.w, state.h, state.paperColor || ''].join('|');
+    const key = [decoTab, state.w, state.h, state.paperColor || '', decoInk()].join('|');
     const grid = document.getElementById('decoGrid');
     if (key !== decoBuilt) {
       decoBuilt = key;
       grid.innerHTML = '';
-      [null].concat(DECOS.filter(d => d.group === decoTab)).forEach(d => {
+      [null].concat(DECOS.filter(d => d.group === decoTab)).forEach((d, k) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'deco-tile';
+        b.className = 'deco-tile' + (k >= DECO_SHOWN ? ' extra' : '');
         b.dataset.deco = d ? d.id : '';
         const box = document.createElement('div');
         box.className = 'deco-thumb';
@@ -2722,17 +2814,38 @@
         const name = document.createElement('span');
         name.textContent = d ? d.name : '없음';
         b.append(box, name);
-        b.addEventListener('click', () => setDeco(sel, d ? d.id : ''));
+        // 이미 고른 것을 한 번 더 누르면 해제
+        b.addEventListener('click', () => {
+          const cur = decoOf(sel);
+          setDeco(sel, d && !(cur && cur.id === d.id) ? d.id : '');
+        });
         grid.appendChild(b);
       });
     }
+    // 접힌 쪽에 있는 것을 고른 칸이면 펼쳐서 보여 준다
+    const curTile = cur && grid.querySelector('.deco-tile[data-deco="' + cur.id + '"]');
+    if (curTile && curTile.classList.contains('extra')) decoOpen = true;
+    grid.classList.toggle('fold', !decoOpen);
+    const extras = [...grid.querySelectorAll('.deco-tile.extra')];
+    const more = document.getElementById('decoMore');
+    more.hidden = !extras.length;
+    const peek = DECOS.filter(d => d.group === decoTab).slice(DECO_SHOWN - 1).map(d => d.ring ? d.ring[0] : d.rows ? d.rows[0] : d.corners).filter(Boolean).slice(0, 4);
+    more.innerHTML = decoOpen ? '접기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+      : '<span class="peek">' + peek.map(m => '<span style="background:' + (state.paperColor || '#FFF3A0') + '"><img src="data/deco/' + m + '.png" alt=""></span>').join('') + '</span>' + extras.length + '개 더 보기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
     grid.querySelectorAll('.deco-tile').forEach(b => {
       b.disabled = !usable;
       b.classList.toggle('on', usable && b.dataset.deco === (cur ? cur.id : ''));
+      b.title = b.dataset.deco && cur && cur.id === b.dataset.deco ? '한 번 더 누르면 해제' : '';
     });
     document.querySelectorAll('.deco-tabs button').forEach(b => {
       b.classList.toggle('on', b.dataset.g === decoTab);
       b.setAttribute('aria-selected', String(b.dataset.g === decoTab));
+    });
+    document.getElementById('decoInkRow').hidden = decoTab !== 'bw';
+    document.querySelectorAll('#decoInk button').forEach(b => {
+      const on = b.dataset.ink === decoInk();
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
     });
     document.getElementById('decoWho').textContent = sel >= 0 ? (sel + 1) + '번 칸' : '';
     document.getElementById('decoAll').disabled = !cur;
@@ -2754,6 +2867,14 @@
     decoTab = b.dataset.g;
     renderDecoPicker();
   }));
+  document.querySelectorAll('#decoInk button').forEach(b => b.addEventListener('click', () => {
+    state = { ...state, decoInk: b.dataset.ink };
+    saveState(); render();
+  }));
+  document.getElementById('decoMore').addEventListener('click', () => {
+    decoOpen = !decoOpen;
+    renderDecoPicker();
+  });
   document.getElementById('decoAll').addEventListener('click', () => {
     const cur = decoOf(sel);
     if (!cur) return;
@@ -3361,9 +3482,36 @@
     installing = true;
     document.getElementById('updNotes').textContent = '설치가 끝나면 프로그램이 다시 켜집니다. 설정과 템플릿은 그대로 남습니다.';
     await writeBackup();   // 설치 전에 설정을 파일로 한 번 더 저장
+    const screen = document.getElementById('updScreen'), bar = document.getElementById('usBar');
+    const fill = document.getElementById('usFill'), text = document.getElementById('usText');
+    const mb = n => (n / 1048576).toFixed(1);
+    document.getElementById('usTitle').textContent = '새 버전 ' + showVersion(updCard.dataset.version || '') + ' 받는 중';
+    bar.classList.add('flow');
+    screen.classList.add('show');
+    screen.setAttribute('aria-hidden', 'false');
+    const ev = window.__TAURI__.event;
+    const offs = await Promise.all([
+      ev.listen('update-progress', e => {
+        const [got, total] = e.payload;
+        if (!total) { text.textContent = mb(got) + ' MB 받음'; return; }
+        bar.classList.remove('flow');
+        const pct = Math.min(100, Math.round(got / total * 100));
+        fill.style.width = pct + '%';
+        text.textContent = pct + '%  (' + mb(got) + ' / ' + mb(total) + ' MB)';
+      }),
+      ev.listen('update-installing', () => {
+        document.getElementById('usTitle').textContent = '설치하는 중';
+        bar.classList.add('flow');
+        text.textContent = '잠시 후 새 버전으로 다시 켜집니다';
+      })
+    ]);
     try {
       await window.__TAURI__.core.invoke('install_update');
     } catch (e) {
+      offs.forEach(off => off());
+      screen.classList.remove('show');
+      screen.setAttribute('aria-hidden', 'true');
+      fill.style.width = '0';
       go.disabled = false;
       document.getElementById('updLater').disabled = false;
       go.textContent = '다시 시도';
@@ -3480,7 +3628,51 @@
     try { return (parseInt(localStorage.getItem(HELP_SEEN_KEY), 10) || 0) >= TOUR_VERSION; } catch (e) { return true; }
   }
 
-  // 시작 화면 설명: 손글씨가 다 써진 뒤(1.5초) 한 글자씩 입력되듯 나타난다
+  // 시작 화면 로고: 획 순서대로 펜이 지나가듯 드러난다. 이름 1.3초, 이어서 서명 0.5초
+  const WM_START = 0.45, WM_NAME = 1.3, WM_SIGN = 0.5;
+  (function writeWordmark() {
+    const D = window.WORDMARK_STROKES;
+    const img = document.querySelector('.splash-text img.wordmark');
+    if (!D || !img || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'wordmark');
+    svg.setAttribute('viewBox', '0 0 ' + D.w + ' ' + D.h);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', img.alt);
+    svg.style.width = (104 * D.w / D.h) + 'px';
+    const mask = document.createElementNS(ns, 'mask');
+    mask.id = 'wmMask';
+    [['maskUnits', 'userSpaceOnUse'], ['x', 0], ['y', 0], ['width', D.w], ['height', D.h]].forEach(([k, v]) => mask.setAttribute(k, v));
+    [0, 1].forEach(g => {
+      const list = D.strokes.filter(t => t[0] === g);
+      const total = list.reduce((sum, t) => sum + t[1], 0) || 1;
+      let at = WM_START + (g ? WM_NAME + 0.05 : 0);
+      list.forEach(([, len, d]) => {
+        const dur = len / total * (g ? WM_SIGN : WM_NAME);
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('pathLength', '1');
+        path.setAttribute('class', 'wm-stroke');
+        path.setAttribute('stroke-width', D.width);
+        path.style.animationDuration = dur.toFixed(3) + 's';
+        path.style.animationDelay = at.toFixed(3) + 's';
+        mask.appendChild(path);
+        at += dur;
+      });
+    });
+    const defs = document.createElementNS(ns, 'defs');
+    defs.appendChild(mask);
+    const image = document.createElementNS(ns, 'image');
+    image.setAttribute('href', img.getAttribute('src'));
+    image.setAttribute('width', D.w);
+    image.setAttribute('height', D.h);
+    image.setAttribute('mask', 'url(#wmMask)');
+    svg.append(defs, image);
+    img.replaceWith(svg);
+  })();
+
+  // 시작 화면 설명: 손글씨가 다 써진 뒤(2초) 한 글자씩 입력되듯 나타난다
   (function typeSplashSub() {
     const el = document.getElementById('splashSub');
     if (!el) return;
@@ -3494,7 +3686,7 @@
       el.appendChild(caret);
       if (n < text.length) setTimeout(tick, 75);
       else setTimeout(() => caret.remove(), 900);
-    }, 1500);
+    }, 2000);
   })();
 
   // 시작 화면: 잠깐 보여 주고 사라진다. 클릭하면 바로 닫힌다
@@ -3510,7 +3702,7 @@
     }, 650);
   };
   splash.addEventListener('click', closeSplash);
-  setTimeout(closeSplash, 3700);   // 손글씨(1.5초) → 설명 타이핑(약 0.8초) → 1.4초쯤 머문다
+  setTimeout(closeSplash, 4200);   // 손글씨(약 2.3초) → 설명 타이핑(약 0.8초) → 1.1초쯤 머문다
 </script>
 </body>
 </html>
