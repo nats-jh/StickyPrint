@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="author" content="kangjoonhyuk">
 <title>StickyPrint</title>
+<link rel="stylesheet" href="data/fonts/fonts.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Cpath d="M12 8h40a4 4 0 0 1 4 4v28L40 56H12a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" fill="%23F5C842"/%3E%3Cpath d="M56 40L40 56V44a4 4 0 0 1 4-4z" fill="%23D9A520"/%3E%3Crect x="16" y="20" width="28" height="3.5" rx="1.75" fill="%232b2410"/%3E%3Crect x="16" y="29" width="18" height="3.5" rx="1.75" fill="%232b2410" opacity=".45"/%3E%3C/svg%3E">
 <style>
   @page { size: A4; margin: 0; }
@@ -97,6 +98,7 @@
   .cards > div { background: #262b31; border: 1px solid #333a42; border-radius: 10px; padding: 12px 14px; }
   .cards h4 { margin: 0 0 4px; }
   .cards p { font-size: 12.5px; }
+  .modal-body .help-foot { margin-top: 16px; font-size: 12px; color: #8b95a1; }
   .keys-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 22px; justify-content: start; color: #c3cad2; font-size: 12.5px; }
   kbd {
     display: inline-block; min-width: 22px; padding: 1px 6px; border-radius: 5px; background: #2b3138; border: 1px solid #444c56;
@@ -292,6 +294,9 @@
     white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   }
   .toolbar button:hover { background: #353c44; }
+  /* 글자 크기: "가" + 작은 위/아래 화살표 (한글 프로그램처럼) */
+  .toolbar .fs-btn { padding: 0 6px; }
+  .toolbar .fs-btn svg.ga { width: 22px; height: 18px; }
   .toolbar button svg { width: 16px; height: 16px; vertical-align: middle; }
   .toolbar .caret svg { width: 12px; height: 12px; }
   .toolbar button:disabled { opacity: .35; cursor: default; background: #2b3138; }
@@ -333,6 +338,7 @@
     border: 1px solid #3a4048; border-radius: 6px; font-size: 12px; font-family: inherit;
   }
   .toolbar select:disabled { opacity: .35; }
+  .toolbar #fontFamily { width: 104px; }
   .page {
     width: 210mm; height: 297mm; margin: 0 auto; background: #fff; position: relative;
     box-shadow: 0 2px 12px rgba(0,0,0,.25); overflow: hidden;
@@ -486,21 +492,21 @@
     <div class="modal-body">
       <h4>인쇄하기</h4>
       <ol class="steps">
-        <li><b>칸 고르기</b><span>빈 칸의 "+ 템플릿 넣기"로 템플릿을 넣고, 채워진 칸은 위쪽 이름표를 눌러 바꾸거나 비웁니다. 테두리는 모든 칸에, 내용은 템플릿이 있는 칸만 찍힙니다.</span></li>
-        <li><b>테두리 인쇄</b><span>빈 A4에 포스트잇을 붙일 자리(점선)를 찍습니다.</span></li>
+        <li><b>칸에 템플릿 넣기</b><span>빈 칸의 "+ 템플릿 넣기"를 누릅니다. 채워진 칸은 위쪽 이름표를 눌러 바꾸거나 비웁니다.</span></li>
+        <li><b>테두리 인쇄</b><span>빈 A4에 포스트잇 붙일 자리(점선)가 모든 칸에 찍힙니다. 이 종이는 계속 재활용하세요.</span></li>
         <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
-        <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다.</span></li>
+        <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다. 템플릿이 있는 칸만 찍힙니다.</span></li>
       </ol>
-      <p class="note-box">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.</p>
-
-      <h4>종이 넣는 방향 (처음 한 번만)</h4>
-      <p>빈 종이 윗면에 화살표를 그리고 아무거나 인쇄해 보세요. 표시한 면에 찍히면 포스트잇 면을 위로, 반대 면에 찍히면 아래로 넣으면 됩니다.</p>
+      <p class="note-box">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.
+        종이 넣는 면은 프린터마다 다르니 처음 한 번은 빈 종이에 표시를 하고 시험해 보세요.</p>
 
       <div class="cards">
-        <div><h4>글자 고치기</h4><p>포스트잇을 클릭하면 바로 고칠 수 있습니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 크기, 색, 이모티콘을 씁니다.</p></div>
-        <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다.</p></div>
-        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 조절하고 배경은 끌어서 옮깁니다.</p></div>
-        <div><h4>템플릿</h4><p>빈 칸의 "+ 템플릿 넣기"로 바로 넣을 수 있습니다. 고친 칸은 목록 옆에 노란 점이 생깁니다. 저장하면 "내 템플릿"에 남고, 다른 PC로는 내보내기 → 가져오기.</p></div>
+        <div><h4>글자 고치기</h4><p>포스트잇 글자를 클릭해서 바로 고칩니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 정렬(왼쪽, 가운데, 오른쪽), 크기, 색, 이모티콘을 씁니다. 글자를 드래그한 뒤 누르세요.</p></div>
+        <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다. 지우개는 도형을 클릭. Esc로 끝냅니다.</p></div>
+        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 고르고, 배경이나 앞에 띄운 사진은 끌어서 옮깁니다.</p></div>
+        <div><h4>템플릿 저장</h4><p>고친 칸은 이름표에 노란 점이 생깁니다. 저장하면 그 템플릿에, 사본 저장은 새 템플릿으로 남습니다. 다른 PC로는 내보내기 → 가져오기.</p></div>
+        <div><h4>되돌리기</h4><p>칸을 클릭한 뒤 Ctrl+Z는 그 칸만 되돌립니다(그리기 포함). 칸 바깥을 클릭해 선택을 풀면 가장 최근에 바뀐 칸부터 되돌립니다.</p></div>
+        <div><h4>보기와 크기</h4><p>미리보기 아래에서 포스트잇 색을 깔아 볼 수 있습니다(인쇄 안 됨). 화면 크기는 오른쪽 아래 버튼이나 Ctrl+휠, 포스트잇 크기는 왼쪽 아래 "크기와 위치"에서.</p></div>
       </div>
 
       <h4>단축키</h4>
@@ -510,9 +516,10 @@
         <span><kbd>Ctrl</kbd> <kbd>S</kbd> 템플릿 저장</span>
         <span><kbd>Ctrl</kbd> <kbd>B</kbd> 굵게</span>
         <span><kbd>Ctrl</kbd> <kbd>U</kbd> 밑줄</span>
-        <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
         <span><kbd>Ctrl</kbd> + 휠 화면 크게, 작게</span>
+        <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
       </div>
+      <p class="help-foot">새 버전은 켤 때와 켜 둔 동안 6시간마다 자동으로 확인합니다. 왼쪽 아래 "업데이트 확인"으로 바로 확인할 수도 있습니다.</p>
     </div>
   </div>
 </div>
@@ -609,9 +616,10 @@
       <button data-cmd="justifyRight" class="align-btn" title="오른쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></button>
     </div>
     <div class="tb-group" title="글자 크기. 글자를 드래그한 뒤 고르세요">
-      <button id="fontDown" title="글자 작게">A-</button>
+      <select id="fontFamily" title="글꼴. 글자를 드래그한 뒤 고르세요"></select>
       <select id="fontSize"></select>
-      <button id="fontUp" title="글자 크게">A+</button>
+      <button id="fontUp" class="fs-btn up" title="글자 크게"><svg class="ga" viewBox="0 0 22 18" aria-hidden="true"><text x="0" y="14.6" font-size="15.5" font-weight="700" fill="currentColor" font-family="Malgun Gothic, Apple SD Gothic Neo, sans-serif">가</text><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.1 5.6l2.3-2.4 2.3 2.4"/></g></svg></button>
+      <button id="fontDown" class="fs-btn down" title="글자 작게"><svg class="ga" viewBox="0 0 22 18" aria-hidden="true"><text x="0" y="14.6" font-size="15.5" font-weight="700" fill="currentColor" font-family="Malgun Gothic, Apple SD Gothic Neo, sans-serif">가</text><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.1 13.4l2.3 2.4 2.3-2.4"/></g></svg></button>
     </div>
     <div class="tb-group colors" id="colors" title="글자색. 글자를 드래그한 뒤 고르세요">
       <label class="pick" title="다른 색 고르기. 글자를 드래그한 뒤 누르세요"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s6 6.4 6 10.2a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg><input type="color" id="colorPick" value="#e0362c"></label>
@@ -700,6 +708,16 @@
   const BLANK_HTML = '<h1>제목</h1><p>내용</p>';
   const UNDO_GROUP_MS = 700;   // 이 시간 안에 이어 친 글자는 되돌리기 한 번에 묶는다
   const UNDO_MAX = 200;
+  // 앱에 넣은 글꼴 (data/fonts, 인터넷 없이 동작). 맨 앞은 Windows 기본 글꼴
+  const FONT_FAMILIES = [
+    { name: '맑은 고딕', css: "'Malgun Gothic'" },
+    { name: '프리텐다드', css: "'Pretendard Variable'" },
+    { name: '나눔고딕', css: "'Nanum Gothic'" },
+    { name: '나눔손글씨 펜', css: "'Nanum Pen Script'" },
+    { name: '개구', css: "'Gaegu'" },
+    { name: '감자꽃', css: "'Gamja Flower'" },
+    { name: '주아', css: "'Jua'" }
+  ];
   const FONT_SIZES = [7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40];   // pt
   let suppressInput = false;   // 글자 크기 바꾸는 중간 단계는 되돌리기 기록에 남기지 않는다
   // 많이 쓰는 포스트잇 색 (화면 미리보기용)
@@ -1041,7 +1059,7 @@
     });
     document.querySelectorAll('.emoji button').forEach(b => { b.disabled = !tpl; });
     document.getElementById('emojiToggle').disabled = !tpl;
-    ['fontDown', 'fontUp', 'fontSize'].forEach(id => { document.getElementById(id).disabled = !tpl; });
+    ['fontDown', 'fontUp', 'fontSize', 'fontFamily'].forEach(id => { document.getElementById(id).disabled = !tpl; });
     const markSwatches = (box, cur) => {
       const known = PAPER_COLORS.some(pc => pc.c === cur);
       box.querySelectorAll('button').forEach(b => b.classList.toggle('on', cur !== null && b.dataset.c === cur));
@@ -1674,6 +1692,7 @@
       if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr>');
       else document.execCommand(cmd);
       if (history[sel]) history[sel].at = 0;
+      syncFontSize();
     });
   });
 
@@ -1716,12 +1735,27 @@
     const inPaper = caretInSelectedPaper();
     const pt = inPaper ? selectionPt() : 0;
     fontSel.value = FONT_SIZES.includes(pt) ? String(pt) : '';
-    // 커서가 있는 줄의 정렬을 버튼에 표시
-    document.querySelectorAll('.align-btn').forEach(b => {
-      let on = false;
-      if (inPaper) { try { on = document.queryCommandState(b.dataset.cmd); } catch (e) { on = false; } }
-      b.classList.toggle('on', on);
-    });
+    const famSel = document.getElementById('fontFamily');
+    if (famSel) {
+      let cur = '';
+      if (inPaper) {
+        const node = window.getSelection().anchorNode;
+        const el = node && (node.nodeType === 1 ? node : node.parentElement);
+        const first = el ? getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim() : '';
+        const hit = FONT_FAMILIES.find(f => f.css.replace(/'/g, '') === first);
+        cur = hit ? hit.css : '';
+      }
+      famSel.value = cur;
+    }
+    // 커서가 있는 줄의 실제 정렬을 버튼에 표시 (브라우저의 queryCommandState 는 실제 모양과 어긋날 때가 있어 직접 읽는다)
+    let align = '';
+    if (inPaper) {
+      const node = window.getSelection().anchorNode;
+      const el = node && (node.nodeType === 1 ? node : node.parentElement);
+      const ta = el ? getComputedStyle(el).textAlign : '';
+      align = ta === 'center' ? 'justifyCenter' : (ta === 'right' || ta === 'end') ? 'justifyRight' : 'justifyLeft';
+    }
+    document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('on', b.dataset.cmd === align));
   }
 
   function stepFontSize(dir) {
@@ -1757,6 +1791,28 @@
     });
   });
   document.addEventListener('selectionchange', syncFontSize);
+
+  const familySel = document.getElementById('fontFamily');
+  familySel.innerHTML = '<option value="">글꼴</option>' + FONT_FAMILIES.map(f =>
+    '<option value="' + f.css.replace(/"/g, '&quot;') + '" style="font-family:' + f.css.replace(/"/g, '&quot;') + '">' + f.name + '</option>').join('');
+  let rangeBeforeFamily = null;
+  familySel.addEventListener('mousedown', () => {
+    const s = window.getSelection();
+    rangeBeforeFamily = caretInSelectedPaper() && s.rangeCount ? s.getRangeAt(0).cloneRange() : null;
+  });
+  familySel.addEventListener('change', () => {
+    const fam = familySel.value;
+    if (!fam) return;
+    if (!rangeBeforeFamily || rangeBeforeFamily.collapsed || !paperOf(sel)) { flash('글꼴을 바꿀 글자를 먼저 드래그하세요'); syncFontSize(); return; }
+    paperOf(sel).focus();
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(rangeBeforeFamily);
+    if (history[sel]) history[sel].at = 0;
+    document.execCommand('fontName', false, fam.replace(/'/g, ''));
+    if (history[sel]) history[sel].at = 0;
+    syncFontSize();
+  });
 
   // 글자색: 동그라미 = 자주 쓰는 색, 맨 끝 = 다른 색 고르기
   function applyColor(color) {

@@ -25,6 +25,7 @@ A4 용지에 포스트잇을 붙여 프린터로 포스트잇에 바로 인쇄�
 | `web/StickyPrint.html` | 앱 화면 전체 (브라우저로 바로 열어도 동작) |
 | `web/data/템플릿.txt` | 처음 들어 있는 기본 템플릿 |
 | `web/data/*.png` | 화면에 쓰는 이미지 (로고 등, 아래 라이선스 참고) |
+| `web/data/fonts/` | 앱에 넣은 한글 글꼴 6종 (OFL, 인터넷 없이 동작). 각 폴더에 라이선스 |
 | `app-icon.png` | 아이콘 원본 1024px. `npx tauri icon app-icon.png` 로 `src-tauri/icons/` 생성 |
 | `scripts/build-dist.mjs` | `web/` → `dist/` (index.html, 템플릿을 `templates.js` 로) |
 | `scripts/tauri-build.mjs` | 서명 키를 넣고 `tauri build` |
@@ -73,6 +74,7 @@ npm run dev
 ## 라이선스
 
 - **코드**: [MIT](LICENSE) © 2026 kangjoonhyuk
+- **글꼴** (`web/data/fonts/`): 프리텐다드, 나눔고딕, 나눔손글씨 펜, 개구, 감자꽃, 주아. 모두 SIL Open Font License 1.1 (각 폴더의 LICENSE.txt)
 - **이미지 (로고, 이름 이미지, 아이콘)**: MIT 대상이 아닙니다. © 2026 kangjoonhyuk, All rights reserved.
   `web/data/*.png`, `app-icon.png`, `src-tauri/icons/` 는 이 프로그램을 빌드·배포하는 용도로만 들어 있으며,
   다른 프로그램이나 목적에 쓰거나 고쳐 쓸 수 없습니다. 이 저장소를 바탕으로 다른 것을 만든다면 이미지는 직접 만들어 바꿔 주세요.
