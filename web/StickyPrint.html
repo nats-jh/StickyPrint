@@ -3629,7 +3629,7 @@
   }
 
   // 시작 화면 로고: 획 순서대로 펜이 지나가듯 드러난다. 이름 1.3초, 이어서 서명 0.5초
-  const WM_START = 0.45, WM_NAME = 1.3, WM_SIGN = 0.5;
+  const WM_START = 0.45, WM_NAME = 1.3, WM_SIGN = 0.5, WM_TAP = 0.08;
   (function writeWordmark() {
     const D = window.WORDMARK_STROKES;
     const img = document.querySelector('.splash-text img.wordmark');
@@ -3646,10 +3646,13 @@
     [['maskUnits', 'userSpaceOnUse'], ['x', 0], ['y', 0], ['width', D.w], ['height', D.h]].forEach(([k, v]) => mask.setAttribute(k, v));
     [0, 1].forEach(g => {
       const list = D.strokes.filter(t => t[0] === g);
-      const total = list.reduce((sum, t) => sum + t[1], 0) || 1;
+      // 점(i 의 점)은 콕 찍는 시간을 따로 주고, 나머지 획이 남은 시간을 길이대로 나눈다
+      const dots = list.filter(t => t[3]).length;
+      const total = list.reduce((sum, t) => sum + (t[3] ? 0 : t[1]), 0) || 1;
+      const span = (g ? WM_SIGN : WM_NAME) - dots * WM_TAP;
       let at = WM_START + (g ? WM_NAME + 0.05 : 0);
-      list.forEach(([, len, d]) => {
-        const dur = len / total * (g ? WM_SIGN : WM_NAME);
+      list.forEach(([, len, d, dot]) => {
+        const dur = dot ? WM_TAP : len / total * span;
         const path = document.createElementNS(ns, 'path');
         path.setAttribute('d', d);
         path.setAttribute('pathLength', '1');

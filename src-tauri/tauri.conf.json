@@ -58,8 +58,7 @@
         "headerImage": "installer/header.bmp",
         "sidebarImage": "installer/sidebar.bmp",
         "uninstallerIcon": "installer/uninstaller.ico",
-        "uninstallerHeaderImage": "installer/header.bmp",
-        "installerHooks": "installer/hooks.nsh"
+        "uninstallerHeaderImage": "installer/header.bmp"
       }
     }
   }
