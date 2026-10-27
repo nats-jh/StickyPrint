@@ -29,7 +29,10 @@
   .splash-text { animation: sp-in .4s .3s ease-out both; }
   /* 손글씨가 펜으로 써지듯 왼쪽부터 드러난다 */
   .splash-text .wordmark { display: block; height: 104px; width: auto; animation: sp-write 1s .45s cubic-bezier(.45, .05, .35, 1) both; }
-  .splash-text .splash-sub { margin: 4px 0 0 6px; }
+  /* 손글씨가 다 써진 뒤 설명이 타이핑하듯 나타난다 (글자는 스크립트가 한 자씩 넣음) */
+  .splash-text .splash-sub { margin: 4px 0 0 6px; min-height: 1.4em; }
+  .splash-sub .type-caret { display: inline-block; width: 1px; height: 1.05em; margin-left: 2px; vertical-align: -2px; background: #9aa4af; animation: caret-blink .9s steps(1) infinite; }
+  @keyframes caret-blink { 50% { opacity: 0; } }
   @keyframes sp-write { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
   #splash.hide .splash-in { transform: scale(1.03); transition: transform .4s ease; }
   .splash-name { font-size: 34px; color: #fff; letter-spacing: -.02em; line-height: 1; }
@@ -114,7 +117,7 @@
   ::-webkit-scrollbar-button { display: none; }
 
   /* ---------- 공통 반응 ---------- */
-  button, select, .slots .row, input { transition: background-color .15s, border-color .15s, color .15s, opacity .15s, transform .08s; }
+  button, select, input { transition: background-color .15s, border-color .15s, color .15s, opacity .15s, transform .08s; }
   button:active:not(:disabled) { transform: translateY(1px); }
   :focus-visible { outline: 2px solid #4c9aff; outline-offset: 2px; }
   @media (prefers-reduced-motion: no-preference) {
@@ -165,16 +168,7 @@
   .btns button.on { border-color: #4c9aff; background: #22344d; }
   aside button:disabled { opacity: .35; cursor: default; background: #2b3138; }
 
-  .slots { display: flex; flex-direction: column; gap: 4px; }
-  .slots .row {
-    display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px;
-    border: 1px solid transparent; cursor: pointer;
-  }
-  .slots .row.sel { border-color: #4c9aff; background: #22344d; }
-  .slots .row span { width: 16px; color: #9aa4af; text-align: right; flex: none; }
-  .slots .row .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-  .slots .row .dot.on { background: #f5c842; }
-  .slots select, .preset {
+  .preset {
     flex: 1; min-width: 0; padding: 5px; background: #14171a; color: #fff;
     border: 1px solid #3a4048; border-radius: 4px; font-size: 13px;
   }
@@ -263,6 +257,9 @@
   .zoombar button:hover { background: #2b3138; color: #fff; }
   .zoombar svg { width: 15px; height: 15px; }
   .zoombar .zval { min-width: 50px; }
+  .zoombar .zsep { width: 1px; height: 18px; background: #3a4048; margin: 0 3px; order: 9; }
+  .zoombar #clear { order: 10; }
+  .zoombar #clear:hover { color: #ff9b9b; }
   .upd-link { margin-left: 8px; padding: 0; border: 0; background: none; color: #8fbaff; font: 500 11px/1 inherit; cursor: pointer; }
   .upd-link:hover { text-decoration: underline; }
   .update-card {
@@ -370,6 +367,22 @@
     font: 13px/1.3 inherit; cursor: pointer; white-space: nowrap;
   }
   .tpl-menu button:hover { background: #2b3138; }
+  .tpl-menu .cur { color: #8fbaff; font-weight: 700; }
+  .tpl-menu .cur::after { content: '  지금'; font-size: 10.5px; color: #6f7882; font-weight: 400; }
+  .tpl-menu .clear { color: #ff9b9b; border-top: 1px solid #2c3238; border-radius: 0 0 6px 6px; }
+  .slot-chip {
+    position: absolute; left: 0; bottom: 100%; margin-bottom: 1.2mm; z-index: 4; max-width: 100%;
+    display: flex; align-items: center; gap: 5px; padding: 3px 7px; border-radius: 6px;
+    border: 1px solid #c9d1da; background: #fff; color: #3a424b; font: 600 11px/1.25 inherit; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08); cursor: pointer; opacity: 0; transform: translateY(2px);
+    transition: opacity .15s, transform .15s, border-color .15s;
+  }
+  .slot:hover .slot-chip, .slot.sel .slot-chip, .slot-chip:focus-visible { opacity: 1; transform: none; }
+  .slot.sel .slot-chip { border-color: #4c9aff; color: #1f4f99; }
+  .slot-chip .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .slot-chip svg { width: 12px; height: 12px; flex: none; color: #8b95a1; }
+  .slot-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #d5dbe2; flex: none; }
+  .slot-chip .dot.on { background: #f5c842; }
   .tpl-menu .new { color: #8fbaff; border-top: 1px solid #2c3238; border-radius: 0 0 6px 6px; margin-top: 3px; padding-top: 8px; }
   .slot.empty .hint {
     position: absolute; inset: 0; display: flex; flex-direction: column; gap: 2mm; align-items: center; justify-content: center;
@@ -411,6 +424,7 @@
   body.m-content .credit { visibility: hidden; }
 
   @media print {
+    .slot-chip { display: none !important; }
     .slot { background-color: transparent !important; }   /* 포스트잇 색은 화면 미리보기용 */
     .update-card { display: none !important; }
     .page { opacity: 1 !important; }
@@ -443,7 +457,7 @@
     <img class="logo" src="data/logo.png" alt="">
     <div class="splash-text">
       <img class="wordmark" src="data/wordmark.png" alt="StickyPrint © 2026 kangjoonhyuk">
-      <div class="splash-sub">포스트잇 인쇄 도우미</div>
+      <div class="splash-sub" id="splashSub" data-text="포스트잇 인쇄 도우미" aria-label="포스트잇 인쇄 도우미"></div>
     </div>
   </div>
 </div>
@@ -456,7 +470,7 @@
     <div class="modal-body">
       <h4>인쇄하기</h4>
       <ol class="steps">
-        <li><b>칸 고르기</b><span>왼쪽 "칸 배치"에서 쓸 칸에 템플릿을 고릅니다. 테두리는 모든 칸에 찍히고, 내용은 템플릿을 고른 칸만 찍힙니다.</span></li>
+        <li><b>칸 고르기</b><span>빈 칸의 "+ 템플릿 넣기"로 템플릿을 넣고, 채워진 칸은 위쪽 이름표를 눌러 바꾸거나 비웁니다. 테두리는 모든 칸에, 내용은 템플릿이 있는 칸만 찍힙니다.</span></li>
         <li><b>테두리 인쇄</b><span>빈 A4에 포스트잇을 붙일 자리(점선)를 찍습니다.</span></li>
         <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
         <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다.</span></li>
@@ -512,9 +526,6 @@
   </div>
   <div class="warn" id="warn"></div>
 
-  <h2>칸 배치<span class="h2-sub">쓸 칸에만 템플릿을 고르세요</span></h2>
-  <div class="slots" id="slots"></div>
-  <button class="small-btn" id="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span>모두 비우기</span></button>
 
   <h2>선택한 칸<span class="h2-sub">포스트잇을 클릭하면 선택됩니다</span></h2>
   <div class="panel">
@@ -635,6 +646,8 @@
     <button id="zoomOut" title="작게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
     <button id="zoomReset" class="zval" title="100%로">100%</button>
     <button id="zoomIn" title="크게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <span class="zsep"></span>
+    <button id="clear" title="모든 칸 비우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
     <button id="zoomFit" title="화면 너비에 맞춤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
 </main>
@@ -834,9 +847,7 @@
     if (sel >= cells.length) sel = 0;
     pickedImg = null;
     const page = document.getElementById('page');
-    const slotList = document.getElementById('slots');
     page.innerHTML = '';
-    slotList.innerHTML = '';
 
     cells.forEach((cell, i) => {
       const tpl = slotTpl(i);
@@ -869,25 +880,22 @@
       } else {
         delete history[i];
       }
+      slot.dataset.tpl = tpl ? tpl.id : '';
+      if (tpl) {
+        // 칸 위 이름표: 누르면 템플릿 바꾸기·비우기
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'slot-chip';
+        chip.title = '템플릿 바꾸기 또는 비우기';
+        chip.innerHTML = '<span class="dot" title="고친 내용 있음"></span><span class="name"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+        chip.querySelector('.name').textContent = tpl.name;
+        chip.addEventListener('mousedown', e => { e.stopPropagation(); select(i); });
+        chip.addEventListener('click', e => { e.stopPropagation(); openTplMenu(slot, i); });
+        slot.appendChild(chip);
+      }
       slot.addEventListener('mousedown', () => select(i));
       if (!tpl) slot.querySelector('.add-tpl').addEventListener('click', e => { e.stopPropagation(); openTplMenu(slot, i); });
       page.appendChild(slot);
-
-      const row = document.createElement('div');
-      row.className = 'row';
-      const opt = t => '<option value="' + t.id + '"' + (tpl && tpl.id === t.id ? ' selected' : '') + '>' + t.name + '</option>';
-      const group = (label, list) => (list.length ? '<optgroup label="' + label + '">' + list.map(opt).join('') + '</optgroup>' : '');
-      const opts = '<option value="">비움</option>'
-        + group('기본 템플릿', templates.filter(t => inFile(t.id)))
-        + group('내 템플릿', templates.filter(t => !inFile(t.id)));
-      row.innerHTML = '<span>' + (i + 1) + '</span><select>' + opts + '</select><span class="dot" title="고친 내용 있음"></span>';
-      row.addEventListener('mousedown', () => select(i));
-      row.querySelector('select').addEventListener('change', e => {
-        sel = i;
-        state = { ...state, slots: withSlot(state.slots, i, e.target.value), drafts: withoutDraft(state.drafts, i) };
-        saveState(); render();
-      });
-      slotList.appendChild(row);
     });
 
     const credit = document.createElement('div');
@@ -904,7 +912,7 @@
     renderPanel();
   }
 
-  // 빈 칸 위에 템플릿 목록을 펼친다
+  // 칸 위에 템플릿 목록을 펼친다 (빈 칸의 "+ 템플릿 넣기", 채워진 칸의 이름표)
   function openTplMenu(slot, i) {
     closeTplMenu();
     const menu = document.createElement('div');
@@ -927,11 +935,18 @@
         sel = i;
         state = { ...state, slots: withSlot(state.slots, i, t.id), drafts: withoutDraft(state.drafts, i) };
         saveState(); render();
-      }));
+      }, t.id === state.slots[i] ? 'cur' : ''));
     };
     group('기본 템플릿', templates.filter(t => inFile(t.id)));
     group('내 템플릿', templates.filter(t => !inFile(t.id)));
     add('+ 새 빈 템플릿', () => { sel = i; actNew(); }, 'new');
+    if (state.slots[i]) {
+      add('이 칸 비우기', () => {
+        sel = i;
+        state = { ...state, slots: withSlot(state.slots, i, ''), drafts: withoutDraft(state.drafts, i) };
+        saveState(); render();
+      }, 'clear');
+    }
     menu.addEventListener('mousedown', e => e.stopPropagation());
     slot.appendChild(menu);
   }
@@ -948,12 +963,12 @@
     renderPanel();
   }
 
-  // 선택 표시와 "고침(노란 점)" 표시만 다시 그린다 (글자 편집 중에 화면을 새로 그리지 않도록)
+  // 선택 표시와 이름표의 "고침(노란 점)" 표시만 다시 그린다 (글자 편집 중에 화면을 새로 그리지 않도록)
   function markSelection() {
-    document.querySelectorAll('.slot').forEach((el, i) => el.classList.toggle('sel', i === sel));
-    document.querySelectorAll('.slots .row').forEach((el, i) => {
+    document.querySelectorAll('.slot').forEach((el, i) => {
       el.classList.toggle('sel', i === sel);
-      el.querySelector('.dot').classList.toggle('on', hasDraft(i));
+      const dot = el.querySelector('.slot-chip .dot');
+      if (dot) dot.classList.toggle('on', hasDraft(i));
     });
   }
 
@@ -1796,6 +1811,7 @@
   });
 
   document.getElementById('clear').addEventListener('click', () => {
+    if (!confirm('모든 칸을 비울까요? 저장하지 않은 고친 내용도 지워집니다.')) return;
     state = { ...state, slots: [], drafts: {} };
     saveState(); render();
   });
@@ -1945,6 +1961,23 @@
     try { return !!localStorage.getItem(HELP_SEEN_KEY); } catch (e) { return true; }
   }
 
+  // 시작 화면 설명: 손글씨가 다 써진 뒤(1.5초) 한 글자씩 입력되듯 나타난다
+  (function typeSplashSub() {
+    const el = document.getElementById('splashSub');
+    if (!el) return;
+    const text = el.dataset.text;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = text; return; }
+    const caret = document.createElement('span');
+    caret.className = 'type-caret';
+    let n = 0;
+    setTimeout(function tick() {
+      el.textContent = text.slice(0, ++n);
+      el.appendChild(caret);
+      if (n < text.length) setTimeout(tick, 75);
+      else setTimeout(() => caret.remove(), 900);
+    }, 1500);
+  })();
+
   // 시작 화면: 잠깐 보여 주고 사라진다. 클릭하면 바로 닫힌다
   const splash = document.getElementById('splash');
   const closeSplash = () => {
@@ -1958,7 +1991,7 @@
     }, 650);
   };
   splash.addEventListener('click', closeSplash);
-  setTimeout(closeSplash, 3400);   // 손글씨가 다 써진 뒤(약 1.5초) 2초쯤 머문다
+  setTimeout(closeSplash, 3700);   // 손글씨(1.5초) → 설명 타이핑(약 0.8초) → 1.4초쯤 머문다
 </script>
 </body>
 </html>
