@@ -1,36 +1,36 @@
 /*
  * StickyPrint 기본 템플릿
  *
- * 새 템플릿은 아래 { ... } 묶음 하나를 복사해서 붙여 넣고 고친다.
+ * 화면에서 글자를 바로 고치고 "저장"하면 된다. 이 파일은 처음 들어 있는 기본 템플릿이다.
+ * 새 템플릿을 파일로 추가하려면 아래 { ... } 묶음 하나를 복사해서 붙여 넣고 고친다.
  *   id   : 겹치지 않는 영문 이름 (저장된 배치가 이 값으로 기억됨)
- *   name : 화면 목록에 보일 이름
- *   html : 포스트잇에 찍힐 내용
+ *   name : 목록에 보일 이름
+ *   html : 포스트잇에 찍힐 내용 (예시 글은 쓰는 사람이 바로 고쳐 쓴다)
  *
  * html 안에서 쓸 수 있는 모양
- *   <h1>제목</h1>
- *   <div class="sub">부제목·작은 설명</div>
- *   <p>본문</p>            <b>굵게</b>
- *   <span class="blank">직접 입력</span>   ← 밑줄 칸
- *   <p class="note">※ 주의 문구</p>
- *   <div class="foot">맨 아래 줄 (위에 구분선)</div>
+ *   <h1>제목</h1>                          <span class="date">날짜</span> (제목 오른쪽)
+ *   <div class="sub">부제목</div>           <p>본문</p>   <b>굵게</b>
+ *   <ul class="check"><li>할 일</li></ul>  ← 손으로 체크할 네모
+ *   <ul class="check cols2">…</ul>         ← 체크 목록 2단
+ *   <div class="row"><b>항목</b><span>값</span></div>
+ *   <div class="big">크게</div>   <p class="center">가운데</p>   <span class="mono">비밀번호</span>
+ *   <p class="note">※ 주의 문구</p>      <div class="foot">맨 아래 줄 (위에 구분선)</div>
  *
  * 맨 앞에 있는 템플릿이 처음 열었을 때 1번 칸에 들어간다.
- *
- * 저장 후 StickyPrint.html 을 새로고침하면 바로 반영된다.
- * (화면에서 바로 고치고 "저장"해도 된다 — 이 파일은 처음 들어 있는 기본 템플릿)
  */
 window.POSTIT_TEMPLATES = [
   {
     id: 'todo',
     name: '오늘 할 일',
     html: `
-      <h1>오늘 할 일</h1>
-      <p>□ <span class="blank">&nbsp;</span><br>
-         □ <span class="blank">&nbsp;</span><br>
-         □ <span class="blank">&nbsp;</span><br>
-         □ <span class="blank">&nbsp;</span><br>
-         □ <span class="blank">&nbsp;</span></p>
-      <div class="foot">날짜 : <span class="blank">&nbsp;</span></div>
+      <h1>오늘 할 일 <span class="date">10월 27일 (월)</span></h1>
+      <ul class="check">
+        <li>회의 자료 출력하기</li>
+        <li>견적서 메일 회신</li>
+        <li>택배 보내기</li>
+        <li>은행 들르기</li>
+        <li>운동 30분</li>
+      </ul>
     `
   },
   {
@@ -38,28 +38,57 @@ window.POSTIT_TEMPLATES = [
     name: '장보기 목록',
     html: `
       <h1>장보기 목록</h1>
-      <p>□ 우유 &nbsp; □ 계란<br>
-         □ 두부 &nbsp; □ 대파<br>
-         □ 휴지 &nbsp; □ 세제</p>
+      <ul class="check cols2">
+        <li>우유</li>
+        <li>계란</li>
+        <li>두부</li>
+        <li>대파</li>
+        <li>사과</li>
+        <li>휴지</li>
+        <li>세제</li>
+        <li>커피</li>
+      </ul>
       <p class="note">※ 할인 쿠폰 챙기기</p>
+    `
+  },
+  {
+    id: 'phone',
+    name: '전화 메모',
+    html: `
+      <h1>전화 왔어요</h1>
+      <div class="row"><b>받는 분</b><span>김 과장님</span></div>
+      <div class="row"><b>보낸 분</b><span>홍길동 (가나상사)</span></div>
+      <div class="row"><b>연락처</b><span>010-1234-5678</span></div>
+      <div class="row"><b>시간</b><span>오후 2시 30분</span></div>
+      <div class="row"><b>내용</b><span>견적서 확인 후 연락 부탁드립니다</span></div>
+      <ul class="check"><li>다시 전화 부탁</li></ul>
+    `
+  },
+  {
+    id: 'away',
+    name: '자리 비움',
+    html: `
+      <p class="center" style="margin-top:4mm">잠시 자리를 비웠습니다</p>
+      <div class="big">3시 30분<br>돌아옵니다</div>
+      <p class="center note">급한 일은 010-1234-5678</p>
     `
   },
   {
     id: 'wifi',
     name: '와이파이 안내',
     html: `
-      <h1>와이파이 안내</h1>
-      <p><b>이름</b> &nbsp; <span class="blank">직접 입력</span></p>
-      <p><b>비밀번호</b> &nbsp; <span class="blank">직접 입력</span></p>
+      <h1 class="center">Wi-Fi</h1>
+      <div class="row"><b>이름</b><span class="mono">OFFICE_5G</span></div>
+      <div class="row"><b>비밀번호</b><span class="mono">welcome1234</span></div>
       <p class="note">※ 연결이 안 되면 공유기를 껐다 켜 주세요</p>
     `
   },
   {
     id: 'free',
-    name: '빈 메모 (화면에서 직접 입력)',
+    name: '메모',
     html: `
-      <h1>제목</h1>
-      <p>내용</p>
+      <h1>메모</h1>
+      <p>여기를 클릭해서 내용을 쓰세요.</p>
     `
   }
 ];

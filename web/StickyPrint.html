@@ -405,6 +405,21 @@
   .paper .note { font-size: 8pt; line-height: 1.4; }
   .paper .blank { display: inline-block; min-width: 30mm; border-bottom: 0.2mm solid #000; color: #777; font-size: 8pt; }
   .paper hr { border: 0; border-top: 0.2mm solid #000; margin: 1.5mm 0; }
+  /* 템플릿용 모양: 줄 없이 예시 글을 바로 고쳐 쓰도록 */
+  .paper .date { float: right; margin-top: 1mm; font-size: 8pt; color: #555; }
+  .paper ul.check { list-style: none; margin: 0 0 2mm; padding: 0; }
+  .paper ul.check li { position: relative; padding-left: 5mm; margin-bottom: 1.3mm; break-inside: avoid; }
+  .paper ul.check li::before {   /* 손으로 체크할 네모 (글자 기호 대신 선으로) */
+    content: ''; position: absolute; left: 0; top: 0.9mm; width: 2.8mm; height: 2.8mm;
+    border: 0.3mm solid #333; border-radius: 0.6mm;
+  }
+  .paper ul.check.cols2 { columns: 2; column-gap: 4mm; }
+  .paper .row { display: flex; gap: 2mm; align-items: baseline; margin-bottom: 1.6mm; }
+  .paper .row > b { flex: none; width: 13mm; font-size: 8.5pt; color: #444; font-weight: 600; }
+  .paper .row > span { flex: 1; min-width: 0; }
+  .paper .big { margin: 3mm 0 2mm; font-size: 19pt; font-weight: 800; line-height: 1.2; text-align: center; }
+  .paper .center { text-align: center; }
+  .paper .mono { font-family: Consolas, "Courier New", monospace; font-size: 11pt; letter-spacing: .02em; }
   .paper img { max-width: 100%; height: auto; vertical-align: middle; cursor: pointer; }
   .paper img.picked { outline: 0.6mm dashed #4c9aff; }
   /* 자유 배치 사진: 글자 줄은 사진(z 0)과 앞 사진(z 2) 사이(z 1)에 둔다 */
@@ -587,6 +602,11 @@
       <button data-cmd="bold" title="굵게 (Ctrl+B). 글자를 드래그한 뒤 누르세요"><b>B</b></button>
       <button data-cmd="underline" title="밑줄 (Ctrl+U). 글자를 드래그한 뒤 누르세요"><u>U</u></button>
       <button data-cmd="hr" title="구분선 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg></button>
+    </div>
+    <div class="tb-group" title="정렬. 커서가 있는 줄에 적용됩니다">
+      <button data-cmd="justifyLeft" class="align-btn" title="왼쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
+      <button data-cmd="justifyCenter" class="align-btn" title="가운데 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
+      <button data-cmd="justifyRight" class="align-btn" title="오른쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></button>
     </div>
     <div class="tb-group" title="글자 크기. 글자를 드래그한 뒤 고르세요">
       <button id="fontDown" title="글자 작게">A-</button>
@@ -845,7 +865,7 @@
 
   function render() {
     const cells = layout();
-    if (sel >= cells.length) sel = 0;
+    if (sel >= cells.length) sel = -1;
     pickedImg = null;
     const page = document.getElementById('page');
     page.innerHTML = '';
@@ -957,6 +977,18 @@
   }
   document.addEventListener('mousedown', e => { if (!e.target.closest('.tpl-menu')) closeTplMenu(); });
 
+  function deselect() {
+    if (sel < 0) return;
+    sel = -1;
+    pickImage(null);
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.paper')) document.activeElement.blur();
+    markSelection();
+    renderPanel();
+  }
+  document.getElementById('scroll').addEventListener('mousedown', e => {
+    if (!e.target.closest('.slot, .tpl-menu, .zoombar, .update-card')) deselect();
+  });
+
   function select(i) {
     if (sel === i) return;
     sel = i;
@@ -975,15 +1007,16 @@
 
   function renderPanel() {
     const tpl = slotTpl(sel);
-    const h = history[sel];
     const title = document.getElementById('panelTitle');
     const desc = document.getElementById('panelDesc');
     title.textContent = '';
     const no = document.createElement('span');
     no.className = 'slot-no';
-    no.textContent = (sel + 1) + '번 칸';
-    title.append(no, tpl ? tpl.name : '비어 있음');
-    if (tpl && hasDraft(sel)) {
+    no.textContent = sel >= 0 ? (sel + 1) + '번 칸' : '선택 없음';
+    title.append(no, sel < 0 ? '칸을 클릭해서 고르세요' : tpl ? tpl.name : '비어 있음');
+    if (sel < 0) {
+      desc.textContent = 'Ctrl+Z 는 마지막으로 바뀐 칸을 되돌려요';
+    } else if (tpl && hasDraft(sel)) {
       desc.innerHTML = '<span class="badge">수정됨</span>저장하면 템플릿에 반영돼요';
     } else {
       desc.textContent = !tpl ? '칸의 "+ 템플릿 넣기"로 넣으세요'
@@ -1004,7 +1037,7 @@
     del.disabled = !(tpl && isMine(tpl.id));
     document.querySelectorAll('.toolbar button[data-cmd]').forEach(b => {
       const cmd = b.dataset.cmd;
-      b.disabled = !tpl || (cmd === 'undo' && !(h && h.undo.length)) || (cmd === 'redo' && !(h && h.redo.length));
+      b.disabled = cmd === 'undo' ? !canStep(true) : cmd === 'redo' ? !canStep(false) : !tpl;
     });
     document.querySelectorAll('.emoji button').forEach(b => { b.disabled = !tpl; });
     document.getElementById('emojiToggle').disabled = !tpl;
@@ -1019,7 +1052,7 @@
     markSwatches(document.getElementById('paperColorsAll'), state.paperColor || '');
     document.querySelectorAll('#drawTools button, #drawTools select, #drawTools input').forEach(el => { el.disabled = !tpl; });
     if (!tpl && drawTool) setDrawTool(null);
-    document.getElementById('tbWho').textContent = (sel + 1) + '번 칸' + (tpl ? ' 편집' : ' (비어 있음)');
+    document.getElementById('tbWho').textContent = sel < 0 ? '선택 없음' : (sel + 1) + '번 칸' + (tpl ? ' 편집' : ' (비어 있음)');
 
     const imgHere = !!(pickedImg && paperOf(sel) && paperOf(sel).contains(pickedImg));
     document.getElementById('imgAdd').disabled = !tpl;
@@ -1108,6 +1141,10 @@
     return history[i];
   }
 
+  // 칸을 선택하지 않았을 때 Ctrl+Z / Ctrl+Y 가 어느 칸을 되돌릴지: 바뀐 순서대로 칸 번호를 쌓는다
+  let undoOrder = [], redoOrder = [];
+  const dropLast = (arr, i) => { const k = arr.lastIndexOf(i); if (k >= 0) arr.splice(k, 1); };
+
   // 칸 내용이 바뀌었을 때: 기록에 남기고, 템플릿과 다르면 "고친 내용"으로 기억
   function onEdit(i, html, typed) {
     const tpl = slotTpl(i);
@@ -1116,9 +1153,11 @@
     if (!typed || now - h.at > UNDO_GROUP_MS) {
       h.undo.push(h.cur);
       if (h.undo.length > UNDO_MAX) h.undo.shift();
+      undoOrder.push(i);
     }
     h.cur = html;
     h.redo = [];
+    redoOrder = redoOrder.filter(x => x !== i);
     h.at = typed ? now : 0;
     setDraft(i, html, tpl);
   }
@@ -1131,19 +1170,43 @@
     saveState(); checkOverflow(); markSelection(); renderPanel();
   }
 
-  function stepHistory(i, back) {
+  function stepHistory(i, back, focus = true) {
     const h = history[i];
     const from = back ? h && h.undo : h && h.redo;
-    if (!from || !from.length) return;
+    if (!from || !from.length) return false;
     (back ? h.redo : h.undo).push(h.cur);
     h.cur = from.pop();
     h.at = 0;
+    if (back) { dropLast(undoOrder, i); redoOrder.push(i); } else { dropLast(redoOrder, i); undoOrder.push(i); }
     pickedImg = null;
     const paper = paperOf(i);
     paper.innerHTML = h.cur;
-    placeCaretAtEnd(paper);
+    if (focus) placeCaretAtEnd(paper);
     setDraft(i, h.cur, slotTpl(i));
+    return true;
   }
+
+  // 선택한 칸이 있으면 그 칸만, 없으면 가장 최근에 바뀐 칸부터 되돌린다
+  function undoRedo(back) {
+    if (sel >= 0) { stepHistory(sel, back); return; }
+    const order = back ? undoOrder : redoOrder;
+    while (order.length) {
+      const i = order[order.length - 1];
+      const h = history[i];
+      if (h && (back ? h.undo : h.redo).length && paperOf(i)) {
+        stepHistory(i, back, false);
+        flash((i + 1) + '번 칸을 ' + (back ? '되돌렸습니다' : '다시 했습니다'));
+        return;
+      }
+      order.pop();   // 템플릿이 바뀌어 기록이 사라진 칸은 건너뛴다
+    }
+    flash(back ? '되돌릴 것이 없습니다' : '다시 할 것이 없습니다');
+  }
+
+  const canStep = back => {
+    if (sel >= 0) { const h = history[sel]; return !!(h && (back ? h.undo : h.redo).length); }
+    return (back ? undoOrder : redoOrder).some(i => history[i] && (back ? history[i].undo : history[i].redo).length);
+  };
 
   function placeCaretAtEnd(el) {
     el.focus();
@@ -1484,6 +1547,7 @@
   }
 
   function actNew() {
+    if (sel < 0) { flash('새 템플릿을 넣을 칸을 먼저 클릭하세요'); return; }
     const name = askName('새 템플릿 이름', '새 템플릿');
     if (!name) return;
     const next = { id: 'my-' + Date.now(), name: name, html: BLANK_HTML };
@@ -1603,10 +1667,13 @@
     btn.addEventListener('mousedown', e => e.preventDefault());
     btn.addEventListener('click', () => {
       const cmd = btn.dataset.cmd;
-      if (cmd === 'undo' || cmd === 'redo') { stepHistory(sel, cmd === 'undo'); return; }
+      if (cmd === 'undo' || cmd === 'redo') { undoRedo(cmd === 'undo'); return; }
       if (!caretInSelectedPaper()) { flash('포스트잇 안의 글자를 먼저 클릭하거나 드래그하세요'); return; }
+      // 버튼으로 꾸민 것은 글자 입력과 묶지 않고 한 번씩 따로 되돌린다
+      if (history[sel]) history[sel].at = 0;
       if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr>');
       else document.execCommand(cmd);
+      if (history[sel]) history[sel].at = 0;
     });
   });
 
@@ -1646,8 +1713,15 @@
 
   // 커서 위치 글자 크기를 목록에 표시
   function syncFontSize() {
-    const pt = caretInSelectedPaper() ? selectionPt() : 0;
+    const inPaper = caretInSelectedPaper();
+    const pt = inPaper ? selectionPt() : 0;
     fontSel.value = FONT_SIZES.includes(pt) ? String(pt) : '';
+    // 커서가 있는 줄의 정렬을 버튼에 표시
+    document.querySelectorAll('.align-btn').forEach(b => {
+      let on = false;
+      if (inPaper) { try { on = document.queryCommandState(b.dataset.cmd); } catch (e) { on = false; } }
+      b.classList.toggle('on', on);
+    });
   }
 
   function stepFontSize(dir) {
@@ -1849,7 +1923,7 @@
       if (t.closest && t.closest('.paper')) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
       e.preventDefault();
-      stepHistory(sel, key === 'z' && !e.shiftKey);
+      undoRedo(key === 'z' && !e.shiftKey);
       return;
     }
     if ((e.ctrlKey || e.metaKey) && key === 's') {
