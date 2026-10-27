@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="author" content="kangjoonhyuk">
-<title>StickyPrint — 포스트잇 인쇄</title>
+<title>StickyPrint</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Cpath d="M12 8h40a4 4 0 0 1 4 4v28L40 56H12a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" fill="%23F5C842"/%3E%3Cpath d="M56 40L40 56V44a4 4 0 0 1 4-4z" fill="%23D9A520"/%3E%3Crect x="16" y="20" width="28" height="3.5" rx="1.75" fill="%232b2410"/%3E%3Crect x="16" y="29" width="18" height="3.5" rx="1.75" fill="%232b2410" opacity=".45"/%3E%3C/svg%3E">
 <style>
   @page { size: A4; margin: 0; }
@@ -111,6 +111,7 @@
   }
   aside h2 { font-size: 12px; color: #9aa4af; margin: 20px 0 8px; font-weight: 600; letter-spacing: .04em; }
   aside h2:first-child { margin-top: 0; }
+  aside h2 .h2-sub { display: block; margin-top: 3px; font-size: 11px; font-weight: 400; color: #6f7882; letter-spacing: 0; }
   aside button { font-family: inherit; }
 
   .btns { display: flex; flex-direction: column; gap: 6px; }
@@ -150,17 +151,24 @@
     flex: 1; min-width: 0; padding: 5px; background: #14171a; color: #fff;
     border: 1px solid #3a4048; border-radius: 4px; font-size: 13px;
   }
-  .preset { width: 100%; margin-bottom: 8px; padding: 6px; }
+  .preset { width: 100%; margin-bottom: 6px; padding: 6px; }
+  .size-acts { margin-bottom: 10px; }
+  .size-acts .small-btn { margin-top: 0; }
+  aside .small-btn:disabled { opacity: .35; cursor: default; }
 
   .panel { background: #262b31; border: 1px solid #3a4048; border-radius: 8px; padding: 12px; }
-  .panel .title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .panel .title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .panel .title .slot-no { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 500; color: #8b95a1; }
   .panel .desc { font-size: 12px; color: #9aa4af; margin-bottom: 10px; min-height: 16px; }
   .panel .badge {
     display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 4px;
     background: rgba(245, 200, 66, .16); color: #f5c842; font-size: 11px; font-weight: 600;
   }
   .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .acts button { white-space: nowrap; padding: 8px 4px; font-size: 12.5px; letter-spacing: -.01em; }
+  .acts button { white-space: nowrap; padding: 8px 6px; font-size: 12.5px; letter-spacing: -.01em;
+    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .acts button svg, .small-btn svg { width: 14px; height: 14px; flex: none; }
+  .small-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
   .acts .primary { border-color: #4c9aff; background: #2a5aa0; }
   .acts .primary:hover { background: #326bbd; }
   .status { margin-top: 8px; font-size: 12px; color: #7ee2a8; min-height: 16px; }
@@ -179,6 +187,8 @@
   .warn.show { display: block; }
   .help { color: #9aa4af; line-height: 1.6; font-size: 12px; margin: 0; padding-left: 16px; }
   .made { margin-top: 24px; padding-top: 10px; border-top: 1px solid #3a4048; color: #6b7480; font-size: 11px; }
+  .made b { font-weight: 600; color: #8b95a1; }
+  .made .copy { display: block; margin-top: 2px; }
 
   /* ---------- A4 ---------- */
   main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -241,7 +251,7 @@
   }
   .credit {
     position: absolute; left: 0; right: 0; bottom: 8mm; text-align: center;
-    font-size: 7pt; color: #999; letter-spacing: .03em;
+    font-size: 7pt; color: #999; letter-spacing: .03em; white-space: pre;
   }
   .slot { position: absolute; cursor: pointer; }
   .slot .frame { position: absolute; inset: 0; border: 0.3mm dashed #000; pointer-events: none; }
@@ -332,15 +342,15 @@
         <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
         <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다.</span></li>
       </ol>
-      <p class="note-box">인쇄 창에서 <b>배율 100%</b> · <b>여백 없음</b> · <b>머리글/바닥글 끄기</b>를 확인하세요.</p>
+      <p class="note-box">인쇄 창에서 <b>배율 100%</b>, <b>여백 없음</b>, <b>머리글/바닥글 끄기</b>를 확인하세요.</p>
 
       <h4>종이 넣는 방향 (처음 한 번만)</h4>
       <p>빈 종이 윗면에 화살표를 그리고 아무거나 인쇄해 보세요. 표시한 면에 찍히면 포스트잇 면을 위로, 반대 면에 찍히면 아래로 넣으면 됩니다.</p>
 
       <div class="cards">
         <div><h4>글자 고치기</h4><p>포스트잇을 클릭하면 바로 고칠 수 있습니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 크기, 색, 이모티콘을 씁니다.</p></div>
-        <div><h4>그리기</h4><p>펜·직선·네모·원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형·정원이 됩니다.</p></div>
-        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼·배경·앞), 흐림을 조절하고 배경은 끌어서 옮깁니다.</p></div>
+        <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다.</p></div>
+        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 조절하고 배경은 끌어서 옮깁니다.</p></div>
         <div><h4>템플릿</h4><p>고친 칸은 목록 옆에 노란 점이 생깁니다. 저장하면 "내 템플릿"에 남고, 다른 PC로는 내보내기 → 가져오기.</p></div>
       </div>
 
@@ -351,7 +361,7 @@
         <span><kbd>Ctrl</kbd> <kbd>S</kbd> 템플릿 저장</span>
         <span><kbd>Ctrl</kbd> <kbd>B</kbd> 굵게</span>
         <span><kbd>Ctrl</kbd> <kbd>U</kbd> 밑줄</span>
-        <span><kbd>Esc</kbd> 창·그리기 닫기</span>
+        <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
       </div>
     </div>
   </div>
@@ -378,27 +388,31 @@
   </div>
   <div class="warn" id="warn"></div>
 
-  <h2>칸 배치 — 쓸 칸만 템플릿 선택</h2>
+  <h2>칸 배치<span class="h2-sub">쓸 칸에만 템플릿을 고르세요</span></h2>
   <div class="slots" id="slots"></div>
-  <button class="small-btn" id="clear">모두 비우기</button>
+  <button class="small-btn" id="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span>모두 비우기</span></button>
 
-  <h2>선택한 칸 — 포스트잇을 클릭해서 선택</h2>
+  <h2>선택한 칸<span class="h2-sub">포스트잇을 클릭하면 선택됩니다</span></h2>
   <div class="panel">
     <div class="title" id="panelTitle"></div>
     <div class="desc" id="panelDesc"></div>
     <div class="acts">
-      <button class="primary" id="actSave">저장</button>
-      <button id="actSaveAs">새 이름으로 저장</button>
-      <button id="actRename">이름 바꾸기</button>
-      <button id="actRevert">고친 것 취소</button>
-      <button id="actDelete">템플릿 삭제</button>
-      <button id="actNew">+ 새 빈 템플릿</button>
+      <button class="primary" id="actSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></svg><span>저장</span></button>
+      <button id="actSaveAs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/><path d="M14.5 12v6M11.5 15h6"/></svg><span>새 이름으로 저장</span></button>
+      <button id="actRename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 20h6"/></svg><span>이름 바꾸기</span></button>
+      <button id="actRevert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>고친 것 취소</span></button>
+      <button id="actDelete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span id="actDeleteLabel">템플릿 삭제</span></button>
+      <button id="actNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>새 빈 템플릿</span></button>
     </div>
     <div class="status" id="status"></div>
   </div>
 
-  <h2>포스트잇 크기·위치 (mm)</h2>
+  <h2>포스트잇 크기와 위치<span class="h2-sub">단위 mm</span></h2>
   <select class="preset" id="preset"></select>
+  <div class="row2 size-acts">
+    <button class="small-btn" id="sizeSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>지금 크기 저장</span></button>
+    <button class="small-btn" id="sizeDelete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span>내 포스트잇 삭제</span></button>
+  </div>
   <div class="grid2">
     <label class="num">가로<input type="number" id="w" step="1"></label>
     <label class="num">세로<input type="number" id="h" step="1"></label>
@@ -407,14 +421,14 @@
     <label class="num">칸 간격<input type="number" id="gap" step="1"></label>
   </div>
 
-  <h2>템플릿 백업·옮기기</h2>
+  <h2>템플릿 백업<span class="h2-sub">다른 PC로 옮길 때도 사용</span></h2>
   <div class="row2">
-    <button class="small-btn" id="export">내보내기 (파일로 받기)</button>
-    <button class="small-btn" id="import">가져오기 (파일 열기)</button>
+    <button class="small-btn" id="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>내보내기</span></button>
+    <button class="small-btn" id="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M7 14l5-5 5 5"/><path d="M5 4h14"/></svg><span>가져오기</span></button>
   </div>
   <input type="file" id="importFile" accept=".txt,.js" hidden>
 
-  <div class="made">StickyPrint<span id="appVer"></span> · © 2026 kangjoonhyuk</div>
+  <div class="made"><b>StickyPrint</b><span id="appVer"></span><span class="copy">© 2026 kangjoonhyuk</span></div>
 </aside>
 
 <main>
@@ -426,33 +440,33 @@
       <button data-cmd="redo" title="다시하기 (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
     </div>
     <div class="tb-group">
-      <button data-cmd="bold" title="굵게 (Ctrl+B) — 글자를 드래그한 뒤"><b>B</b></button>
-      <button data-cmd="underline" title="밑줄 (Ctrl+U) — 글자를 드래그한 뒤"><u>U</u></button>
+      <button data-cmd="bold" title="굵게 (Ctrl+B). 글자를 드래그한 뒤 누르세요"><b>B</b></button>
+      <button data-cmd="underline" title="밑줄 (Ctrl+U). 글자를 드래그한 뒤 누르세요"><u>U</u></button>
       <button data-cmd="hr" title="구분선 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg></button>
     </div>
-    <div class="tb-group" title="글자 크기 — 글자를 드래그한 뒤">
+    <div class="tb-group" title="글자 크기. 글자를 드래그한 뒤 고르세요">
       <button id="fontDown" title="글자 작게">A-</button>
       <select id="fontSize"></select>
       <button id="fontUp" title="글자 크게">A+</button>
     </div>
-    <div class="tb-group colors" id="colors" title="글자색 — 글자를 드래그한 뒤">
-      <label class="pick" title="다른 색 고르기 — 글자를 드래그한 뒤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s6 6.4 6 10.2a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg><input type="color" id="colorPick" value="#e0362c"></label>
+    <div class="tb-group colors" id="colors" title="글자색. 글자를 드래그한 뒤 고르세요">
+      <label class="pick" title="다른 색 고르기. 글자를 드래그한 뒤 누르세요"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s6 6.4 6 10.2a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg><input type="color" id="colorPick" value="#e0362c"></label>
     </div>
     <div class="tb-group tb-pop">
-      <button id="emojiToggle" title="이모티콘 — 넣을 자리를 클릭한 뒤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button>
+      <button id="emojiToggle" title="이모티콘. 넣을 자리를 클릭한 뒤 누르세요"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button>
       <div class="emoji" id="emoji"></div>
     </div>
-    <div class="tb-group" id="drawTools" title="그리기 — 도구를 고르고 포스트잇 위를 드래그 (다시 누르면 글자 모드)">
-      <button data-tool="pen" title="펜 — 자유롭게 그리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
-      <button data-tool="line" title="직선 (Shift: 수평·수직)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/></svg></button>
+    <div class="tb-group" id="drawTools" title="그리기. 도구를 고르고 포스트잇 위를 드래그하세요. 다시 누르면 글자 모드">
+      <button data-tool="pen" title="펜. 자유롭게 그리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+      <button data-tool="line" title="직선 (Shift: 수평 또는 수직)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/></svg></button>
       <button data-tool="rect" title="네모 (Shift: 정사각형)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg></button>
       <button data-tool="ellipse" title="원 (Shift: 정원)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></button>
-      <button data-tool="erase" title="지우개 — 그린 도형을 클릭해서 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9l-5-5a2 2 0 0 1 0-2.8l9-9a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L11 20"/><path d="M8 11l5 5"/></svg></button>
+      <button data-tool="erase" title="지우개. 그린 도형을 클릭하면 지워집니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9l-5-5a2 2 0 0 1 0-2.8l9-9a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L11 20"/><path d="M8 11l5 5"/></svg></button>
       <label class="pick" title="그리기 색 (왼쪽 색 동그라미로도 바꿀 수 있음)"><input type="color" id="drawColor" value="#e0362c"></label>
       <select id="drawWidth" title="선 굵기">
         <option value="1">얇게</option><option value="2" selected>보통</option><option value="4">굵게</option><option value="7">아주 굵게</option>
       </select>
-      <label class="chk" title="네모·원 속을 색으로 채우기"><input type="checkbox" id="drawFill">채우기</label>
+      <label class="chk" title="네모와 원의 속을 색으로 채우기"><input type="checkbox" id="drawFill">채우기</label>
     </div>
     <div class="tb-group">
       <button id="imgAdd" title="사진 넣기 (Ctrl+V 로 붙여넣기도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg> 사진</button>
@@ -464,7 +478,7 @@
         <option value="back">배경 (글자 뒤)</option>
         <option value="front">앞에 띄우기</option>
       </select>
-      <span class="imgctl" title="투명도 — 배경 사진을 흐리게">
+      <span class="imgctl" title="투명도. 배경 사진을 흐리게 합니다">
         흐림 <input type="range" id="imgAlpha" min="10" max="100" step="10" value="100">
       </span>
       <button id="imgDel" title="선택한 사진 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -496,8 +510,9 @@
 <script>
   const PAGE_W = 210, PAGE_H = 297;
   const STORE_KEY = 'stickyprint-v1';
+  const SIZES_KEY = STORE_KEY + '-sizes';   // 내가 추가한 포스트잇 크기
   const MY_KEY = STORE_KEY + '-templates';
-  const CREDIT = 'StickyPrint · © 2026 kangjoonhyuk';
+  const CREDIT = 'StickyPrint     © 2026 kangjoonhyuk';
   const BLANK_HTML = '<h1>제목</h1><p>내용</p>';
   const UNDO_GROUP_MS = 700;   // 이 시간 안에 이어 친 글자는 되돌리기 한 번에 묶는다
   const UNDO_MAX = 200;
@@ -550,7 +565,7 @@
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
       scheduleBackup();
     } catch (e) {
-      flash('브라우저 저장 공간이 부족합니다 — 사진 크기를 줄이거나 지워 주세요');
+      flash('브라우저 저장 공간이 부족합니다. 사진 크기를 줄이거나 지워 주세요');
     }
   }
 
@@ -562,7 +577,7 @@
     clearTimeout(backupTimer);
     backupTimer = setTimeout(() => {
       const items = {};
-      [STORE_KEY, MY_KEY].forEach(k => { const v = localStorage.getItem(k); if (v !== null) items[k] = v; });
+      [STORE_KEY, MY_KEY, SIZES_KEY].forEach(k => { const v = localStorage.getItem(k); if (v !== null) items[k] = v; });
       tauri.core.invoke('backup_write', { data: JSON.stringify({ v: 1, at: new Date().toISOString(), items: items }) })
         .catch(e => console.warn('backup_write', e));
     }, 1000);
@@ -737,16 +752,20 @@
     const h = history[sel];
     const title = document.getElementById('panelTitle');
     const desc = document.getElementById('panelDesc');
-    title.textContent = (sel + 1) + '번 칸' + (tpl ? ' · ' + tpl.name : '');
+    title.textContent = '';
+    const no = document.createElement('span');
+    no.className = 'slot-no';
+    no.textContent = (sel + 1) + '번 칸';
+    title.append(no, tpl ? tpl.name : '비어 있음');
     if (tpl && hasDraft(sel)) {
       desc.innerHTML = '<span class="badge">수정됨</span>저장하면 템플릿에 반영됩니다';
     } else {
-      desc.textContent = !tpl ? '비어 있음. 위 목록에서 템플릿을 고르거나 "+ 새 빈 템플릿"'
+      desc.textContent = !tpl ? '위 목록에서 템플릿을 고르거나 새 빈 템플릿을 만드세요'
         : '포스트잇 글자를 클릭해서 바로 고칠 수 있습니다';
     }
 
     const del = document.getElementById('actDelete');
-    del.textContent = tpl && isMine(tpl.id) && inFile(tpl.id) ? '원본으로 되돌리기' : '템플릿 삭제';
+    document.getElementById('actDeleteLabel').textContent = tpl && isMine(tpl.id) && inFile(tpl.id) ? '원본으로 되돌리기' : '템플릿 삭제';
     document.getElementById('actSave').disabled = !tpl;
     document.getElementById('actSaveAs').disabled = !tpl;
     document.getElementById('actRename').disabled = !tpl;
@@ -791,7 +810,30 @@
     statusTimer = setTimeout(() => { el.textContent = ''; toast.classList.remove('show'); }, 2500);
   }
 
+  function loadSizes() {
+    try { return JSON.parse(localStorage.getItem(SIZES_KEY)) || []; } catch (e) { return []; }
+  }
+  let customSizes = loadSizes();
+
+  // 크기 목록: 기본 크기(값 0~) + 내 포스트잇(값 c0~) + 직접 입력
+  function renderPresetOptions() {
+    const opt = (v, label) => '<option value="' + v + '">' + label + '</option>';
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    presetSel.innerHTML = '<optgroup label="기본 크기">' + PRESETS.map((p, i) => opt(i, p.name)).join('') + '</optgroup>'
+      + (customSizes.length ? '<optgroup label="내 포스트잇">'
+        + customSizes.map((p, i) => opt('c' + i, esc(p.name) + ' ' + p.w + '×' + p.h)).join('') + '</optgroup>' : '')
+      + opt('custom', '직접 입력');
+  }
+
+  function sizeOf(value) {
+    if (value === 'custom') return null;
+    return value[0] === 'c' ? customSizes[+value.slice(1)] : PRESETS[+value];
+  }
+
   function syncPreset() {
+    const c = customSizes.findIndex(p => p.w === state.w && p.h === state.h);
+    document.getElementById('sizeDelete').disabled = c < 0;
+    if (c >= 0) { document.getElementById('preset').value = 'c' + c; return; }
     const i = PRESETS.findIndex(p => p.w === state.w && p.h === state.h);
     document.getElementById('preset').value = i < 0 ? 'custom' : String(i);
   }
@@ -806,7 +848,7 @@
       if (isOver) over.push(i + 1);
     });
     const warn = document.getElementById('warn');
-    warn.textContent = over.length ? over.join(', ') + '번 칸 글자가 넘칩니다 — 내용을 줄이거나 크기를 키우세요' : '';
+    warn.textContent = over.length ? over.join(', ') + '번 칸 글자가 넘칩니다. 내용을 줄이거나 크기를 키우세요' : '';
     warn.classList.toggle('show', over.length > 0);
   }
 
@@ -919,7 +961,7 @@
         }
         const imgs = paper.querySelectorAll('img');
         pickImage(Array.from(imgs).find(el => el.getAttribute('src') === src) || null);
-        flash('사진을 넣었습니다 — 아래 "크기"로 조절하세요');
+        flash('사진을 넣었습니다. 옆의 크기 막대로 조절하세요');
       };
       img.onerror = () => alert('사진 파일을 열지 못했습니다.');
       img.src = reader.result;
@@ -1202,7 +1244,7 @@
     if (!upsertMine(next)) return;
     state = { ...state, slots: withSlot(state.slots, sel, next.id), drafts: withoutDraft(state.drafts, sel) };
     saveState(); render();
-    flash('"' + name + '" 를 만들었습니다 — 포스트잇 글자를 클릭해 고치세요');
+    flash('"' + name + '" 를 만들었습니다. 포스트잇 글자를 클릭해 고치세요');
   }
 
   // 지금 목록 전체를 템플릿.txt 형식으로 내려받기
@@ -1215,7 +1257,7 @@
       + '    html: ' + bt('\n      ' + t.html.trim() + '\n    ') + '\n'
       + '  }');
     const text = '/*\n'
-      + ' * StickyPrint 템플릿 — 내보낸 날짜 (' + new Date().toLocaleDateString() + ')\n'
+      + ' * StickyPrint 템플릿, 내보낸 날짜 (' + new Date().toLocaleDateString() + ')\n'
       + ' * 다른 PC에서는 StickyPrint의 "가져오기"로 열면 된다.\n'
       + ' * 이 파일로 data 폴더의 템플릿.txt 를 바꾸면 처음부터 들어 있는 템플릿이 된다.\n'
       + ' */\n'
@@ -1265,15 +1307,49 @@
   });
 
   const presetSel = document.getElementById('preset');
-  presetSel.innerHTML = PRESETS.map((p, i) => '<option value="' + i + '">' + p.name + '</option>').join('')
-    + '<option value="custom">직접 입력</option>';
+  renderPresetOptions();
   presetSel.addEventListener('change', () => {
-    const p = PRESETS[presetSel.value];
+    const p = sizeOf(presetSel.value);
     if (!p) return;
     state = { ...state, w: p.w, h: p.h };
     document.getElementById('w').value = p.w;
     document.getElementById('h').value = p.h;
     saveState(); render();
+  });
+
+  function saveSizes(next) {
+    try {
+      localStorage.setItem(SIZES_KEY, JSON.stringify(next));
+      customSizes = next;
+      scheduleBackup();
+      return true;
+    } catch (e) {
+      alert('브라우저 저장소를 쓸 수 없어 저장하지 못했습니다.');
+      return false;
+    }
+  }
+
+  // 지금 가로·세로를 이름 붙여 "내 포스트잇"에 추가 (같은 크기가 있으면 이름만 바꿈)
+  document.getElementById('sizeSave').addEventListener('click', () => {
+    const { w, h } = state;
+    if (!(w >= 10 && h >= 10 && w <= PAGE_W && h <= PAGE_H)) { flash('가로와 세로를 10mm 이상, A4보다 작게 넣어 주세요'); return; }
+    const same = customSizes.findIndex(p => p.w === w && p.h === h);
+    const name = (prompt('포스트잇 이름 (예: 회사 노란 포스트잇)', same >= 0 ? customSizes[same].name : '내 포스트잇') || '').trim();
+    if (!name) return;
+    const item = { name: name, w: w, h: h };
+    const next = same >= 0 ? customSizes.map((p, i) => (i === same ? item : p)) : customSizes.concat([item]);
+    if (!saveSizes(next)) return;
+    renderPresetOptions(); syncPreset();
+    flash('"' + name + '" 크기를 저장했습니다. 크기 목록의 내 포스트잇에서 고르세요');
+  });
+
+  document.getElementById('sizeDelete').addEventListener('click', () => {
+    const i = customSizes.findIndex(p => p.w === state.w && p.h === state.h);
+    if (i < 0) return;
+    if (!confirm('"' + customSizes[i].name + '" 크기를 목록에서 지울까요?')) return;
+    if (!saveSizes(customSizes.filter((_, k) => k !== i))) return;
+    renderPresetOptions(); syncPreset();
+    flash('목록에서 지웠습니다');
   });
 
   // mousedown 을 막아야 포스트잇 안에서 고른 글자 선택이 풀리지 않는다
@@ -1484,7 +1560,18 @@
   render();
 
   document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    const key = e.key.toLowerCase();
+    // 포스트잇 밖(빈 곳, 버튼 등)을 클릭한 뒤에도 선택한 칸에 되돌리기·다시하기
+    // 포스트잇 안은 칸 자체가 처리하고, 숫자 입력칸 등은 그 칸의 기본 동작을 둔다
+    if ((e.ctrlKey || e.metaKey) && (key === 'z' || key === 'y')) {
+      const t = e.target;
+      if (t.closest && t.closest('.paper')) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      e.preventDefault();
+      stepHistory(sel, key === 'z' && !e.shiftKey);
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && key === 's') {
       e.preventDefault();   // 브라우저의 "페이지 저장" 대신 템플릿 저장
       if (slotTpl(sel)) actSave();
     } else if (e.key === 'Escape') {
