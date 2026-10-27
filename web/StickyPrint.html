@@ -18,7 +18,7 @@
   /* ---------- 시작 화면 ---------- */
   #splash {
     position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
-    background: #1a1d21; transition: opacity .4s ease; cursor: pointer;
+    background: #1a1d21; transition: opacity .6s ease; cursor: pointer;
   }
   #splash.hide { opacity: 0; pointer-events: none; }
   .splash-in { display: flex; align-items: center; gap: 18px; }
@@ -106,7 +106,10 @@
   button, select, .slots .row, input { transition: background-color .15s, border-color .15s, color .15s, opacity .15s, transform .08s; }
   button:active:not(:disabled) { transform: translateY(1px); }
   :focus-visible { outline: 2px solid #4c9aff; outline-offset: 2px; }
-  .page { animation: page-in .5s 1.5s cubic-bezier(.2, .8, .2, 1) both; }
+  @media (prefers-reduced-motion: no-preference) {
+    body:not(.ready) .page { opacity: 0; }
+    body.ready .page { animation: page-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+  }
   @keyframes page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
   /* ---------- 조작판 ---------- */
@@ -350,6 +353,7 @@
   body.m-content .credit { visibility: hidden; }
 
   @media print {
+    .page { opacity: 1 !important; }
     .zoombar, .tpl-menu, .add-tpl { display: none !important; }
     .page { zoom: 1 !important; }
     .modal { display: none !important; }
@@ -1754,13 +1758,14 @@
   const closeSplash = () => {
     if (!document.getElementById('splash')) return;
     splash.classList.add('hide');
+    document.body.classList.add('ready');
     setTimeout(() => {
       splash.remove();
       if (!helpSeen()) openHelp();
-    }, 500);
+    }, 650);
   };
   splash.addEventListener('click', closeSplash);
-  setTimeout(closeSplash, 2100);
+  setTimeout(closeSplash, 3400);   // 손글씨가 다 써진 뒤(약 1.5초) 2초쯤 머문다
 </script>
 </body>
 </html>
