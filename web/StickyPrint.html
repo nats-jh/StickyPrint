@@ -220,6 +220,21 @@
   .zoombar button:hover { background: #2b3138; color: #fff; }
   .zoombar svg { width: 15px; height: 15px; }
   .zoombar .zval { min-width: 50px; }
+  .upd-link { margin-left: 8px; padding: 0; border: 0; background: none; color: #8fbaff; font: 500 11px/1 inherit; cursor: pointer; }
+  .upd-link:hover { text-decoration: underline; }
+  .update-card {
+    position: absolute; left: 18px; bottom: 18px; z-index: 9; width: 300px; padding: 14px 16px 12px;
+    background: #1f2328; color: #e6e6e6; border: 1px solid #3a4048; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s;
+  }
+  .update-card.show { opacity: 1; visibility: visible; transform: none; }
+  .uc-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .uc-dot { width: 8px; height: 8px; border-radius: 50%; background: #f5c842; flex: none; }
+  .update-card p { margin: 6px 0 12px 16px; font-size: 12.5px; color: #aab3bd; line-height: 1.5; white-space: pre-line; }
+  .uc-acts { display: flex; justify-content: flex-end; gap: 6px; }
+  .uc-acts button { padding: 7px 12px; border-radius: 7px; border: 1px solid #3a4048; background: #2b3138; color: #fff; font: 600 12.5px/1 inherit; cursor: pointer; }
+  .uc-acts .uc-go { background: #2a5aa0; border-color: #4c9aff; }
+  .uc-acts button:disabled { opacity: .5; cursor: default; }
   .scroll { flex: 1; overflow: auto; padding: 24px 0; }
 
   /* ---------- 편집 도구줄 ---------- */
@@ -353,6 +368,7 @@
   body.m-content .credit { visibility: hidden; }
 
   @media print {
+    .update-card { display: none !important; }
     .page { opacity: 1 !important; }
     .zoombar, .tpl-menu, .add-tpl { display: none !important; }
     .page { zoom: 1 !important; }
@@ -492,7 +508,7 @@
   </div>
   </details>
 
-  <div class="made"><b>StickyPrint</b><span id="appVer"></span><span class="copy">© 2026 kangjoonhyuk</span></div>
+  <div class="made"><b>StickyPrint</b><span id="appVer"></span><button class="upd-link" id="updCheck" hidden>업데이트 확인</button><span class="copy">© 2026 kangjoonhyuk</span></div>
 </aside>
 
 <main>
@@ -554,6 +570,14 @@
     <input type="file" id="imgFile" accept="image/*" hidden>
   </div>
   <div class="toast" id="toast"></div>
+  <div class="update-card" id="updCard" aria-live="polite">
+    <div class="uc-head"><span class="uc-dot"></span><b id="updTitle">새 버전이 있습니다</b></div>
+    <p id="updNotes"></p>
+    <div class="uc-acts">
+      <button class="uc-later" id="updLater">나중에</button>
+      <button class="uc-go" id="updGo">지금 업데이트</button>
+    </div>
+  </div>
   <div class="scroll" id="scroll"><div class="page" id="page"></div></div>
   <div class="zoombar" title="화면 크기 (Ctrl + 마우스 휠). 인쇄 크기는 바뀌지 않습니다">
     <button id="zoomOut" title="작게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
@@ -649,12 +673,17 @@
     const tauri = window.__TAURI__;
     if (!tauri || !tauri.core) return;
     clearTimeout(backupTimer);
-    backupTimer = setTimeout(() => {
-      const items = {};
-      [STORE_KEY, MY_KEY, SIZES_KEY].forEach(k => { const v = localStorage.getItem(k); if (v !== null) items[k] = v; });
-      tauri.core.invoke('backup_write', { data: JSON.stringify({ v: 1, at: new Date().toISOString(), items: items }) })
-        .catch(e => console.warn('backup_write', e));
-    }, 1000);
+    backupTimer = setTimeout(writeBackup, 1000);
+  }
+
+  function writeBackup() {
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) return Promise.resolve();
+    clearTimeout(backupTimer);
+    const items = {};
+    [STORE_KEY, MY_KEY, SIZES_KEY].forEach(k => { const v = localStorage.getItem(k); if (v !== null) items[k] = v; });
+    return tauri.core.invoke('backup_write', { data: JSON.stringify({ v: 1, at: new Date().toISOString(), items: items }) })
+      .catch(e => console.warn('backup_write', e));
   }
 
   function loadMine() {
@@ -1733,6 +1762,45 @@
   pageEl.style.zoom = state.zoom || 1;
   document.getElementById('zoomReset').textContent = Math.round((state.zoom || 1) * 100) + '%';
 
+  // 자동 업데이트 (설치 프로그램에서만): 시작 화면이 닫히면 조용히 확인하고, 새 버전이 있으면 안내 카드를 띄운다
+  const updCard = document.getElementById('updCard');
+  async function checkForUpdate(manual) {
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) return;
+    try {
+      const info = await tauri.core.invoke('check_update');
+      if (!info) { if (manual) flash('지금 최신 버전입니다'); return; }
+      document.getElementById('updTitle').textContent = '새 버전 v' + info.version + '이 있습니다';
+      document.getElementById('updNotes').textContent = info.notes || '';
+      updCard.classList.add('show');
+    } catch (e) {
+      console.warn('check_update', e);
+      if (manual) flash('업데이트를 확인하지 못했습니다. 인터넷 연결을 확인해 주세요');
+    }
+  }
+  document.getElementById('updLater').addEventListener('click', () => updCard.classList.remove('show'));
+  document.getElementById('updGo').addEventListener('click', async () => {
+    const go = document.getElementById('updGo');
+    go.disabled = true;
+    document.getElementById('updLater').disabled = true;
+    go.textContent = '받는 중…';
+    document.getElementById('updNotes').textContent = '설치가 끝나면 프로그램이 다시 켜집니다. 설정과 템플릿은 그대로 남습니다.';
+    await writeBackup();   // 설치 전에 설정을 파일로 한 번 더 저장
+    try {
+      await window.__TAURI__.core.invoke('install_update');
+    } catch (e) {
+      go.disabled = false;
+      document.getElementById('updLater').disabled = false;
+      go.textContent = '다시 시도';
+      document.getElementById('updNotes').textContent = '업데이트에 실패했습니다. ' + e;
+    }
+  });
+  if (window.__TAURI__ && window.__TAURI__.core) {
+    const link = document.getElementById('updCheck');
+    link.hidden = false;
+    link.addEventListener('click', () => checkForUpdate(true));
+  }
+
   // 사용법 창: 왼쪽 위 버튼으로 열고, 처음 실행할 때 한 번은 자동으로 연다
   const helpModal = document.getElementById('help');
   const HELP_SEEN_KEY = STORE_KEY + '-help-seen';
@@ -1759,6 +1827,7 @@
     if (!document.getElementById('splash')) return;
     splash.classList.add('hide');
     document.body.classList.add('ready');
+    setTimeout(() => checkForUpdate(false), 1200);
     setTimeout(() => {
       splash.remove();
       if (!helpSeen()) openHelp();

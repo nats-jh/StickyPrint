@@ -3,8 +3,8 @@ name = "stickyprint"
 version = "1.0.0"
 description = "StickyPrint - 포스트잇 인쇄 도우미"
 authors = ["kangjoonhyuk"]
-license = ""
-repository = ""
+license = "MIT"
+repository = "https://github.com/nats-jh/StickyPrint"
 edition = "2024"
 rust-version = "1.90"
 
@@ -23,3 +23,6 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.12.5", features = [] }
 tauri-plugin-log = "2"
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2"

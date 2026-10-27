@@ -25,9 +25,21 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQwNTYwMzc5MTJFNkFFMDAKUldRQXJ1WVNlUU5XUUNzT0Vmb1R1YjJFaFlJdTdRWHJoUUtQS1gxWE9XYkd1cGlXakVDaGZRUWcK",
+      "endpoints": [
+        "https://github.com/nats-jh/StickyPrint/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "publisher": "kangjoonhyuk",
     "copyright": "© 2026 kangjoonhyuk",
     "shortDescription": "포스트잇 인쇄 도우미",
