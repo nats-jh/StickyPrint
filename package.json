@@ -1,0 +1,17 @@
+{
+  "name": "stickyprint",
+  "version": "1.0.0",
+  "description": "StickyPrint - 포스트잇 인쇄 도우미",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "author": "kangjoonhyuk",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  },
+  "private": true
+}

@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="kangjoonhyuk">
+<title>StickyPrint — 포스트잇 인쇄</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Cpath d="M12 8h40a4 4 0 0 1 4 4v28L40 56H12a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" fill="%23F5C842"/%3E%3Cpath d="M56 40L40 56V44a4 4 0 0 1 4-4z" fill="%23D9A520"/%3E%3Crect x="16" y="20" width="28" height="3.5" rx="1.75" fill="%232b2410"/%3E%3Crect x="16" y="29" width="18" height="3.5" rx="1.75" fill="%232b2410" opacity=".45"/%3E%3C/svg%3E">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    display: flex; height: 100vh; overflow: hidden; background: #d9d9d9;
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #111;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+
+  /* ---------- 시작 화면 ---------- */
+  #splash {
+    position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+    background: #1a1d21; transition: opacity .4s ease; cursor: pointer;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+  .splash-in { display: flex; align-items: center; gap: 18px; }
+  .splash-in .logo {
+    width: 84px; height: 84px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+    animation: sp-drop .7s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .splash-text { animation: sp-in .5s .55s ease-out both; }
+  #splash.hide .splash-in { transform: scale(1.03); transition: transform .4s ease; }
+  .splash-name { font-size: 34px; color: #fff; letter-spacing: -.02em; line-height: 1; }
+  .splash-name b { font-weight: 800; }
+  .splash-name span { font-weight: 300; color: #c9d1d9; }
+  .splash-sub { margin-top: 8px; font-size: 12px; color: #7d8792; letter-spacing: .02em; }
+  .splash-copy { margin-top: 14px; font-size: 10.5px; color: #59626c; letter-spacing: .04em; }
+  @keyframes sp-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes sp-drop {
+    0% { opacity: 0; transform: translateY(-26px) rotate(-9deg) scale(.94); }
+    65% { opacity: 1; transform: translateY(2px) rotate(1.5deg) scale(1); }
+    100% { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash-in .logo, .splash-text, .page { animation: none !important; }
+    * { transition: none !important; }
+  }
+
+  .brand { display: flex; align-items: center; gap: 9px; margin: -2px 0 18px; font-size: 17px; color: #fff; letter-spacing: -.01em; }
+  .brand .logo { width: 26px; height: 26px; }
+  .help-btn {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 7px;
+    border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; font: 500 12px/1.2 inherit; letter-spacing: 0; cursor: pointer;
+  }
+  .help-btn svg { width: 14px; height: 14px; }
+  .help-btn:hover { background: #353c44; color: #fff; }
+
+  /* ---------- 사용법 창 ---------- */
+  .modal {
+    position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+    background: rgba(10, 12, 15, .55); backdrop-filter: blur(2px); opacity: 0; visibility: hidden; transition: opacity .18s, visibility .18s;
+  }
+  .modal.open { opacity: 1; visibility: visible; }
+  .modal-card {
+    width: min(720px, calc(100vw - 48px)); max-height: calc(100vh - 64px); overflow: auto;
+    background: #1f2328; color: #e6e6e6; border: 1px solid #3a4048; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    transform: translateY(8px) scale(.985); transition: transform .2s;
+  }
+  .modal.open .modal-card { transform: none; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 2px; }
+  .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  .modal-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #3a4048; background: #2b3138; color: #cfd6dd; cursor: pointer; display: grid; place-items: center; }
+  .modal-x:hover { background: #353c44; color: #fff; }
+  .modal-x svg { width: 16px; height: 16px; }
+  .modal-body { padding: 4px 22px 22px; font-size: 13px; line-height: 1.6; }
+  .modal-body h4 { margin: 18px 0 8px; font-size: 12px; color: #f5c842; letter-spacing: .03em; font-weight: 700; }
+  .modal-body p { margin: 0; color: #c3cad2; }
+  .steps { list-style: none; margin: 0; padding: 0; }
+  .steps li { position: relative; padding: 0 0 12px 22px; display: flex; flex-direction: column; }
+  .steps li::before { content: ''; position: absolute; left: 2px; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: #f5c842; }
+  .steps li::after { content: ''; position: absolute; left: 6px; top: 18px; bottom: -3px; width: 1px; background: #3a4048; }
+  .steps li:last-child::after { display: none; }
+  .steps b { color: #fff; font-size: 13.5px; }
+  .steps span { color: #aab3bd; font-size: 12.5px; }
+  .modal-body .note-box {
+    padding: 9px 12px; border-radius: 8px; background: rgba(245, 200, 66, .08); border: 1px solid rgba(245, 200, 66, .22);
+    color: #e8dcae; font-size: 12.5px;
+  }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .cards > div { background: #262b31; border: 1px solid #333a42; border-radius: 10px; padding: 12px 14px; }
+  .cards h4 { margin: 0 0 4px; }
+  .cards p { font-size: 12.5px; }
+  .keys-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 22px; justify-content: start; color: #c3cad2; font-size: 12.5px; }
+  kbd {
+    display: inline-block; min-width: 22px; padding: 1px 6px; border-radius: 5px; background: #2b3138; border: 1px solid #444c56;
+    border-bottom-width: 2px; font: 600 11px/1.6 inherit; color: #e6e6e6; text-align: center;
+  }
+  .brand b { font-weight: 800; }
+  .brand span span { font-weight: 300; color: #c9d1d9; }
+
+  /* ---------- 공통 반응 ---------- */
+  button, select, .slots .row, input { transition: background-color .15s, border-color .15s, color .15s, opacity .15s, transform .08s; }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  :focus-visible { outline: 2px solid #4c9aff; outline-offset: 2px; }
+  .page { animation: page-in .5s 1.5s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- 조작판 ---------- */
+  aside {
+    width: 320px; flex: none; overflow-y: auto; background: #1f2328; color: #e6e6e6;
+    padding: 16px; font-size: 13px;
+  }
+  aside h2 { font-size: 12px; color: #9aa4af; margin: 20px 0 8px; font-weight: 600; letter-spacing: .04em; }
+  aside h2:first-child { margin-top: 0; }
+  aside button { font-family: inherit; }
+
+  .btns { display: flex; flex-direction: column; gap: 6px; }
+  .print-btn { display: flex; align-items: center; gap: 11px; }
+  .print-btn .pi {
+    flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+    background: rgba(245, 200, 66, .12); color: #f5c842;
+  }
+  .print-btn .pi svg { width: 17px; height: 17px; }
+  .print-btn .pt { display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+  .print-btn .pt b { font-size: 13px; font-weight: 700; }
+  .print-btn .pt small { font-size: 11px; color: #8b95a1; }
+  .print-btn.preview-btn { margin-top: 4px; padding-top: 6px; padding-bottom: 6px; }
+  .print-btn.preview-btn .pi { width: 26px; height: 26px; background: rgba(76, 154, 255, .14); color: #8fbaff; }
+  .print-btn.on .pt small { color: #a9c6ef; }
+  .step-arrow { display: flex; justify-content: center; height: 10px; margin: -4px 0; color: #4a525c; }
+  .step-arrow svg { width: 16px; height: 16px; margin-top: -3px; }
+  .btns button, .acts button, .small-btn {
+    padding: 8px 10px; border: 1px solid #3a4048; background: #2b3138; color: #fff;
+    border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  .btns button { text-align: left; padding: 9px 10px; white-space: nowrap; }
+  .btns button:hover, .acts button:hover, .small-btn:hover { background: #353c44; }
+  .btns button.on { border-color: #4c9aff; background: #22344d; }
+  aside button:disabled { opacity: .35; cursor: default; background: #2b3138; }
+
+  .slots { display: flex; flex-direction: column; gap: 4px; }
+  .slots .row {
+    display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px;
+    border: 1px solid transparent; cursor: pointer;
+  }
+  .slots .row.sel { border-color: #4c9aff; background: #22344d; }
+  .slots .row span { width: 16px; color: #9aa4af; text-align: right; flex: none; }
+  .slots .row .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .slots .row .dot.on { background: #f5c842; }
+  .slots select, .preset {
+    flex: 1; min-width: 0; padding: 5px; background: #14171a; color: #fff;
+    border: 1px solid #3a4048; border-radius: 4px; font-size: 13px;
+  }
+  .preset { width: 100%; margin-bottom: 8px; padding: 6px; }
+
+  .panel { background: #262b31; border: 1px solid #3a4048; border-radius: 8px; padding: 12px; }
+  .panel .title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .panel .desc { font-size: 12px; color: #9aa4af; margin-bottom: 10px; min-height: 16px; }
+  .panel .badge {
+    display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 4px;
+    background: rgba(245, 200, 66, .16); color: #f5c842; font-size: 11px; font-weight: 600;
+  }
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .acts button { white-space: nowrap; padding: 8px 4px; font-size: 12.5px; letter-spacing: -.01em; }
+  .acts .primary { border-color: #4c9aff; background: #2a5aa0; }
+  .acts .primary:hover { background: #326bbd; }
+  .status { margin-top: 8px; font-size: 12px; color: #7ee2a8; min-height: 16px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  label.num { display: flex; flex-direction: column; gap: 3px; color: #b8c0c8; }
+  label.num input {
+    width: 100%; padding: 5px 6px; background: #14171a; color: #fff;
+    border: 1px solid #3a4048; border-radius: 4px; font-size: 13px;
+  }
+  .row2 { display: flex; gap: 6px; }
+  .row2 .small-btn { flex: 1; font-size: 12px; padding: 7px 6px; white-space: nowrap; }
+  .small-btn { background: none; color: #b8c0c8; font-size: 12px; padding: 5px 8px; margin-top: 6px; }
+
+  .warn { margin-top: 10px; padding: 8px; border-radius: 4px; background: #4a1f1f; color: #ffb4b4; display: none; }
+  .warn.show { display: block; }
+  .help { color: #9aa4af; line-height: 1.6; font-size: 12px; margin: 0; padding-left: 16px; }
+  .made { margin-top: 24px; padding-top: 10px; border-top: 1px solid #3a4048; color: #6b7480; font-size: 11px; }
+
+  /* ---------- A4 ---------- */
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .scroll { flex: 1; overflow: auto; padding: 24px 0; }
+
+  /* ---------- 편집 도구줄 ---------- */
+  .toolbar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 8px 14px;
+    background: #1f2328; border-bottom: 1px solid #3a4048; color: #e6e6e6; font-size: 13px;
+    position: relative; z-index: 5;
+  }
+  .tb-who { font-weight: 700; min-width: 120px; }
+  .tb-group { display: flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid #3a4048; }
+  .toolbar button {
+    min-width: 32px; height: 30px; padding: 0 8px; background: #2b3138; color: #fff;
+    border: 1px solid #3a4048; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: inherit;
+    white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .toolbar button:hover { background: #353c44; }
+  .toolbar button svg { width: 16px; height: 16px; vertical-align: middle; }
+  .toolbar .caret svg { width: 12px; height: 12px; }
+  .toolbar button:disabled { opacity: .35; cursor: default; background: #2b3138; }
+  .toolbar .colors button { width: 22px; min-width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid #3a4048; }
+  .toolbar .colors button:hover { border-color: #fff; }
+  .toolbar .pick { display: flex; align-items: center; gap: 2px; cursor: pointer; margin-left: 4px; color: #b8c0c8; }
+  .toolbar .pick svg { width: 15px; height: 15px; }
+  .toolbar input[type=color] { width: 28px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .toast {
+    position: fixed; top: 64px; left: calc(50% + 160px); transform: translateX(-50%); z-index: 20;
+    padding: 9px 16px; border-radius: 8px; background: #22344d; border: 1px solid #4c9aff; color: #fff;
+    font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.3); opacity: 0; pointer-events: none;
+    transform: translate(-50%, -6px); transition: opacity .2s, transform .2s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .tb-pop { position: relative; }
+  .toolbar button.on { border-color: #4c9aff; background: #22344d; color: #fff; }
+  .chk { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #b8c0c8; white-space: nowrap; cursor: pointer; }
+  .chk input { margin: 0; }
+  .emoji {
+    display: grid; visibility: hidden; opacity: 0; transform: translateY(-4px) scale(.98); transform-origin: top right;
+    transition: opacity .14s, transform .14s, visibility .14s; position: absolute; top: 36px; right: 0; z-index: 10; padding: 8px;
+    grid-template-columns: repeat(10, 32px); gap: 3px;
+    background: #262b31; border: 1px solid #3a4048; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  .emoji.open { visibility: visible; opacity: 1; transform: none; }
+  .toolbar .emoji button:hover:not(:disabled) { transform: scale(1.15); background: #353c44; }
+  .toolbar .emoji button { min-width: 0; width: 32px; padding: 0; font-size: 16px; }
+  .imgctl { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #b8c0c8; white-space: nowrap; }
+  .imgctl input[type=range] { width: 90px; }
+  .imgctl .val { width: 34px; text-align: right; }
+  .imgctl #imgAlpha { width: 60px; }
+  .toolbar select {
+    height: 30px; padding: 0 4px; background: #14171a; color: #fff;
+    border: 1px solid #3a4048; border-radius: 6px; font-size: 12px; font-family: inherit;
+  }
+  .toolbar select:disabled { opacity: .35; }
+  .page {
+    width: 210mm; height: 297mm; margin: 0 auto; background: #fff; position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25); overflow: hidden;
+  }
+  .credit {
+    position: absolute; left: 0; right: 0; bottom: 8mm; text-align: center;
+    font-size: 7pt; color: #999; letter-spacing: .03em;
+  }
+  .slot { position: absolute; cursor: pointer; }
+  .slot .frame { position: absolute; inset: 0; border: 0.3mm dashed #000; pointer-events: none; }
+  .slot .no {
+    position: absolute; top: 1mm; right: 1.5mm; font-size: 7pt; color: #aaa; pointer-events: none;
+  }
+  .slot.empty .frame { border-color: #ccc; }
+  .slot.empty .paper { display: none; }
+  .slot.empty .hint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 9pt; text-align: center; padding: 4mm;
+  }
+  .slot .frame { outline: 0.7mm solid transparent; outline-offset: 2.5mm; transition: outline-color .18s, outline-offset .18s; }
+  .slot.sel .frame { outline-color: #4c9aff; outline-offset: 0.6mm; }
+  .slot.over .frame { border: 0.5mm solid #e0362c; }
+
+  /* ---------- 포스트잇 글자 ---------- */
+  .paper {
+    position: absolute; inset: 0; padding: 5mm 5mm 4mm; overflow: hidden; outline: none; cursor: text;
+    font-size: 9.5pt; line-height: 1.45; word-break: keep-all;
+  }
+  .paper h1 { font-size: 11.5pt; margin: 0 0 1mm; line-height: 1.3; }
+  .paper .sub { font-size: 8pt; color: #444; margin: 0 0 2.5mm; padding-bottom: 1.5mm; border-bottom: 0.2mm solid #000; }
+  .paper p { margin: 0 0 2mm; }
+  .paper .sm { font-size: 8pt; color: #444; }
+  .paper .note { font-size: 8pt; line-height: 1.4; }
+  .paper .blank { display: inline-block; min-width: 30mm; border-bottom: 0.2mm solid #000; color: #777; font-size: 8pt; }
+  .paper hr { border: 0; border-top: 0.2mm solid #000; margin: 1.5mm 0; }
+  .paper img { max-width: 100%; height: auto; vertical-align: middle; cursor: pointer; }
+  .paper img.picked { outline: 0.6mm dashed #4c9aff; }
+  /* 자유 배치 사진: 글자 줄은 사진(z 0)과 앞 사진(z 2) 사이(z 1)에 둔다 */
+  .paper > :not(img) { position: relative; z-index: 1; }
+  .paper img.float { position: absolute; cursor: move; }
+  .paper img.float.picked { z-index: 3 !important; }
+  /* 그리기 층: 칸 전체를 덮는 투명 SVG. 좌표는 칸 기준 0~100 */
+  .paper > svg.draw { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
+  body.drawing .paper { cursor: crosshair; }
+  body.tool-erase .paper { cursor: not-allowed; }
+  body.tool-erase .paper > svg.draw > * { pointer-events: visiblePainted; cursor: pointer; }
+  body.tool-erase .paper > svg.draw > *:hover { opacity: .4; }
+  .paper .foot { margin-top: 2.5mm; padding-top: 1.5mm; border-top: 0.2mm solid #000; font-size: 8.5pt; }
+
+  /* ---------- 인쇄 모드 ---------- */
+  body.m-frame .paper { visibility: hidden; }
+  body.m-content .frame { visibility: hidden; }
+  body.m-content .credit { visibility: hidden; }
+
+  @media print {
+    .modal { display: none !important; }
+    #splash { display: none; }
+    .toast { display: none; }
+    body { display: block; height: auto; background: #fff; }
+    aside { display: none; }
+    main { display: block; }
+    .toolbar { display: none; }
+    .scroll { padding: 0; overflow: visible; }
+    .page { margin: 0; box-shadow: none; }
+    .slot .no, .slot .hint { display: none; }
+    .slot.empty { display: none; }
+    .slot.sel .frame, .paper img.picked { outline: none; }
+    .slot.over .frame { border: 0.3mm dashed #000; }
+    body.m-content .slot.over .frame { visibility: hidden; }
+  }
+</style>
+</head>
+<body class="m-preview">
+<div id="splash" title="클릭하면 바로 시작">
+  <div class="splash-in">
+    <img class="logo" src="data/logo.png" alt="">
+    <div class="splash-text">
+      <div class="splash-name"><b>Sticky</b><span>Print</span></div>
+      <div class="splash-sub">포스트잇 인쇄 도우미</div>
+      <div class="splash-copy">© 2026 kangjoonhyuk</div>
+    </div>
+  </div>
+</div>
+<div id="help" class="modal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-labelledby="helpTitle">
+    <div class="modal-head">
+      <h3 id="helpTitle">사용법</h3>
+      <button class="modal-x" id="helpClose" title="닫기 (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <h4>인쇄하기</h4>
+      <ol class="steps">
+        <li><b>칸 고르기</b><span>왼쪽 "칸 배치"에서 쓸 칸에만 템플릿을 고릅니다. 비운 칸은 인쇄되지 않습니다.</span></li>
+        <li><b>테두리 인쇄</b><span>빈 A4에 포스트잇을 붙일 자리(점선)를 찍습니다.</span></li>
+        <li><b>포스트잇 붙이기</b><span>점선에 맞춰 붙입니다. 접착 부분이 프린터로 먼저 들어가는 쪽에 오게 붙이세요.</span></li>
+        <li><b>내용 인쇄</b><span>종이를 같은 방향으로 다시 넣고 인쇄합니다.</span></li>
+      </ol>
+      <p class="note-box">인쇄 창에서 <b>배율 100%</b> · <b>여백 없음</b> · <b>머리글/바닥글 끄기</b>를 확인하세요.</p>
+
+      <h4>종이 넣는 방향 (처음 한 번만)</h4>
+      <p>빈 종이 윗면에 화살표를 그리고 아무거나 인쇄해 보세요. 표시한 면에 찍히면 포스트잇 면을 위로, 반대 면에 찍히면 아래로 넣으면 됩니다.</p>
+
+      <div class="cards">
+        <div><h4>글자 고치기</h4><p>포스트잇을 클릭하면 바로 고칠 수 있습니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 크기, 색, 이모티콘을 씁니다.</p></div>
+        <div><h4>그리기</h4><p>펜·직선·네모·원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형·정원이 됩니다.</p></div>
+        <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼·배경·앞), 흐림을 조절하고 배경은 끌어서 옮깁니다.</p></div>
+        <div><h4>템플릿</h4><p>고친 칸은 목록 옆에 노란 점이 생깁니다. 저장하면 "내 템플릿"에 남고, 다른 PC로는 내보내기 → 가져오기.</p></div>
+      </div>
+
+      <h4>단축키</h4>
+      <div class="keys-grid">
+        <span><kbd>Ctrl</kbd> <kbd>Z</kbd> 되돌리기</span>
+        <span><kbd>Ctrl</kbd> <kbd>Y</kbd> 다시하기</span>
+        <span><kbd>Ctrl</kbd> <kbd>S</kbd> 템플릿 저장</span>
+        <span><kbd>Ctrl</kbd> <kbd>B</kbd> 굵게</span>
+        <span><kbd>Ctrl</kbd> <kbd>U</kbd> 밑줄</span>
+        <span><kbd>Esc</kbd> 창·그리기 닫기</span>
+      </div>
+    </div>
+  </div>
+</div>
+<aside>
+  <div class="brand"><img class="logo" src="data/logo.png" alt=""><span><b>Sticky</b><span>Print</span></span>
+    <button class="help-btn" id="helpOpen" title="사용법"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6"/><path d="M12 17h.01"/></svg>사용법</button>
+  </div>
+  <h2>인쇄</h2>
+  <div class="btns">
+    <button data-mode="frame" class="print-btn">
+      <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.6"/></svg></span>
+      <span class="pt"><b>테두리 인쇄</b><small>포스트잇 붙일 자리</small></span>
+    </button>
+    <div class="step-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M7 14l5 5 5-5"/></svg></div>
+    <button data-mode="content" class="print-btn">
+      <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6H7z"/><path d="M17 12h.01"/></svg></span>
+      <span class="pt"><b>내용 인쇄</b><small>포스트잇 붙인 뒤</small></span>
+    </button>
+    <button data-mode="preview" class="print-btn on preview-btn">
+      <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></span>
+      <span class="pt"><b>미리보기</b></span>
+    </button>
+  </div>
+  <div class="warn" id="warn"></div>
+
+  <h2>칸 배치 — 쓸 칸만 템플릿 선택</h2>
+  <div class="slots" id="slots"></div>
+  <button class="small-btn" id="clear">모두 비우기</button>
+
+  <h2>선택한 칸 — 포스트잇을 클릭해서 선택</h2>
+  <div class="panel">
+    <div class="title" id="panelTitle"></div>
+    <div class="desc" id="panelDesc"></div>
+    <div class="acts">
+      <button class="primary" id="actSave">저장</button>
+      <button id="actSaveAs">새 이름으로 저장</button>
+      <button id="actRename">이름 바꾸기</button>
+      <button id="actRevert">고친 것 취소</button>
+      <button id="actDelete">템플릿 삭제</button>
+      <button id="actNew">+ 새 빈 템플릿</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <h2>포스트잇 크기·위치 (mm)</h2>
+  <select class="preset" id="preset"></select>
+  <div class="grid2">
+    <label class="num">가로<input type="number" id="w" step="1"></label>
+    <label class="num">세로<input type="number" id="h" step="1"></label>
+    <label class="num">왼쪽 여백<input type="number" id="mx" step="1"></label>
+    <label class="num">위쪽 여백<input type="number" id="my" step="1"></label>
+    <label class="num">칸 간격<input type="number" id="gap" step="1"></label>
+  </div>
+
+  <h2>템플릿 백업·옮기기</h2>
+  <div class="row2">
+    <button class="small-btn" id="export">내보내기 (파일로 받기)</button>
+    <button class="small-btn" id="import">가져오기 (파일 열기)</button>
+  </div>
+  <input type="file" id="importFile" accept=".txt,.js" hidden>
+
+  <div class="made">StickyPrint<span id="appVer"></span> · © 2026 kangjoonhyuk</div>
+</aside>
+
+<main>
+  <!-- 편집 도구줄: 선택한 칸에 적용 -->
+  <div class="toolbar">
+    <span class="tb-who" id="tbWho"></span>
+    <div class="tb-group">
+      <button data-cmd="undo" title="되돌리기 (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button data-cmd="redo" title="다시하기 (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+    </div>
+    <div class="tb-group">
+      <button data-cmd="bold" title="굵게 (Ctrl+B) — 글자를 드래그한 뒤"><b>B</b></button>
+      <button data-cmd="underline" title="밑줄 (Ctrl+U) — 글자를 드래그한 뒤"><u>U</u></button>
+      <button data-cmd="hr" title="구분선 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg></button>
+    </div>
+    <div class="tb-group" title="글자 크기 — 글자를 드래그한 뒤">
+      <button id="fontDown" title="글자 작게">A-</button>
+      <select id="fontSize"></select>
+      <button id="fontUp" title="글자 크게">A+</button>
+    </div>
+    <div class="tb-group colors" id="colors" title="글자색 — 글자를 드래그한 뒤">
+      <label class="pick" title="다른 색 고르기 — 글자를 드래그한 뒤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s6 6.4 6 10.2a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg><input type="color" id="colorPick" value="#e0362c"></label>
+    </div>
+    <div class="tb-group tb-pop">
+      <button id="emojiToggle" title="이모티콘 — 넣을 자리를 클릭한 뒤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg> <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button>
+      <div class="emoji" id="emoji"></div>
+    </div>
+    <div class="tb-group" id="drawTools" title="그리기 — 도구를 고르고 포스트잇 위를 드래그 (다시 누르면 글자 모드)">
+      <button data-tool="pen" title="펜 — 자유롭게 그리기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+      <button data-tool="line" title="직선 (Shift: 수평·수직)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/></svg></button>
+      <button data-tool="rect" title="네모 (Shift: 정사각형)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg></button>
+      <button data-tool="ellipse" title="원 (Shift: 정원)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></button>
+      <button data-tool="erase" title="지우개 — 그린 도형을 클릭해서 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9l-5-5a2 2 0 0 1 0-2.8l9-9a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L11 20"/><path d="M8 11l5 5"/></svg></button>
+      <label class="pick" title="그리기 색 (왼쪽 색 동그라미로도 바꿀 수 있음)"><input type="color" id="drawColor" value="#e0362c"></label>
+      <select id="drawWidth" title="선 굵기">
+        <option value="1">얇게</option><option value="2" selected>보통</option><option value="4">굵게</option><option value="7">아주 굵게</option>
+      </select>
+      <label class="chk" title="네모·원 속을 색으로 채우기"><input type="checkbox" id="drawFill">채우기</label>
+    </div>
+    <div class="tb-group">
+      <button id="imgAdd" title="사진 넣기 (Ctrl+V 로 붙여넣기도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg> 사진</button>
+      <span class="imgctl" title="사진을 클릭한 뒤 크기 조절">
+        <input type="range" id="imgSize" min="10" max="100" step="5" value="50"><span class="val" id="imgSizeVal"></span>
+      </span>
+      <select id="imgMode" title="사진 배치">
+        <option value="inline">글자처럼</option>
+        <option value="back">배경 (글자 뒤)</option>
+        <option value="front">앞에 띄우기</option>
+      </select>
+      <span class="imgctl" title="투명도 — 배경 사진을 흐리게">
+        흐림 <input type="range" id="imgAlpha" min="10" max="100" step="10" value="100">
+      </span>
+      <button id="imgDel" title="선택한 사진 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <input type="file" id="imgFile" accept="image/*" hidden>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="scroll"><div class="page" id="page"></div></div>
+</main>
+
+<script src="data/템플릿.txt"></script>
+<script>
+  // 설치 프로그램(Tauri)에서만: 화면 저장소가 비어 있는데 파일 백업이 있으면 되살리고 다시 연다.
+  // 업데이트·정리로 저장소가 비어도 템플릿과 설정이 남게 하려는 것. 브라우저로 열 때는 아무 일도 안 한다.
+  (function () {
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) return;
+    tauri.core.invoke('backup_read').then(text => {
+      if (!text) return;
+      const backup = JSON.parse(text);
+      const items = (backup && backup.items) || {};
+      const keys = Object.keys(items);
+      if (!keys.length || keys.some(k => localStorage.getItem(k) !== null)) return;
+      keys.forEach(k => localStorage.setItem(k, items[k]));
+      location.reload();
+    }).catch(e => console.warn('backup_read', e));
+  })();
+</script>
+<script>
+  const PAGE_W = 210, PAGE_H = 297;
+  const STORE_KEY = 'stickyprint-v1';
+  const MY_KEY = STORE_KEY + '-templates';
+  const CREDIT = 'StickyPrint · © 2026 kangjoonhyuk';
+  const BLANK_HTML = '<h1>제목</h1><p>내용</p>';
+  const UNDO_GROUP_MS = 700;   // 이 시간 안에 이어 친 글자는 되돌리기 한 번에 묶는다
+  const UNDO_MAX = 200;
+  const FONT_SIZES = [7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40];   // pt
+  let suppressInput = false;   // 글자 크기 바꾸는 중간 단계는 되돌리기 기록에 남기지 않는다
+  const COLORS = ['#000000', '#e0362c', '#1f6fd6', '#1c9a4b', '#f08a00', '#8a3ad6', '#777777'];
+  const IMG_MAX_PX = 800;     // 넣는 사진은 이 크기로 줄여서 저장 (브라우저 저장 공간이 작다)
+  const EMOJIS = [
+    '😀', '😊', '😂', '🥰', '😎', '😢', '😮', '🤔', '😴', '🤗',
+    '👍', '👏', '🙏', '💪', '👉', '✌️', '🎉', '❤️', '⭐', '✨',
+    '✅', '❗', '❓', '⚠️', '📌', '📝', '💡', '🔔', '📞', '⏰',
+    '📅', '🛒', '🏠', '🚗', '🍚', '☕', '🎂', '🎁', '🌸', '🍀'
+  ]
+  // 많이 쓰는 포스트잇 크기 (가로 × 세로 mm)
+  const PRESETS = [
+    { name: '정사각 76×76 (가장 흔함)', w: 76, h: 76 },
+    { name: '큰 정사각 102×102', w: 102, h: 102 },
+    { name: '가로형 127×76', w: 127, h: 76 },
+    { name: '세로형 76×127', w: 76, h: 127 },
+    { name: '큰 가로형 152×102', w: 152, h: 102 },
+    { name: '작은 가로형 76×51', w: 76, h: 51 },
+    { name: '미니 51×38', w: 51, h: 38 }
+  ];
+
+  const fileTemplates = window.POSTIT_TEMPLATES || [];
+  const DEFAULTS = {
+    w: 76, h: 76, mx: 20, my: 20, gap: 10,
+    slots: fileTemplates.length ? [fileTemplates[0].id] : [],
+    drafts: {}   // 칸별로 저장 전 고친 내용: { 칸번호: { id: 템플릿id, html } }
+  };
+
+  let state = loadState();
+  let mine = loadMine();        // 이 브라우저에 저장한 템플릿. 파일 템플릿과 id 가 같으면 그걸 덮는다
+  let templates = [], byId = {};
+  let sel = 0;                  // 선택한 칸
+  const history = {};           // 칸별 되돌리기 기록: { id, cur, undo: [], redo: [], at }
+  mergeTemplates();
+
+  // ---------- 저장소 ----------
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (saved) return { ...DEFAULTS, ...saved, drafts: saved.drafts || {} };
+    } catch (e) { /* 저장소를 못 쓰는 환경이면 기본값 */ }
+    return { ...DEFAULTS };
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      scheduleBackup();
+    } catch (e) {
+      flash('브라우저 저장 공간이 부족합니다 — 사진 크기를 줄이거나 지워 주세요');
+    }
+  }
+
+  // 설치 프로그램에서는 바뀔 때마다(1초 모아서) 파일로도 백업한다
+  let backupTimer = 0;
+  function scheduleBackup() {
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) return;
+    clearTimeout(backupTimer);
+    backupTimer = setTimeout(() => {
+      const items = {};
+      [STORE_KEY, MY_KEY].forEach(k => { const v = localStorage.getItem(k); if (v !== null) items[k] = v; });
+      tauri.core.invoke('backup_write', { data: JSON.stringify({ v: 1, at: new Date().toISOString(), items: items }) })
+        .catch(e => console.warn('backup_write', e));
+    }, 1000);
+  }
+
+  function loadMine() {
+    try { return JSON.parse(localStorage.getItem(MY_KEY)) || []; } catch (e) { return []; }
+  }
+
+  // 저장에 실패하면 목록을 그대로 두고 false
+  function commitMine(next) {
+    try {
+      localStorage.setItem(MY_KEY, JSON.stringify(next));
+      mine = next;
+      mergeTemplates();
+      scheduleBackup();
+      return true;
+    } catch (e) {
+      alert('브라우저 저장소를 쓸 수 없어 저장하지 못했습니다.');
+      return false;
+    }
+  }
+
+  function upsertMine(t) {
+    return commitMine(mine.some(m => m.id === t.id) ? mine.map(m => (m.id === t.id ? t : m)) : mine.concat([t]));
+  }
+
+  function mergeTemplates() {
+    const mineById = Object.fromEntries(mine.map(t => [t.id, t]));
+    templates = fileTemplates.map(t => mineById[t.id] || t)
+      .concat(mine.filter(t => !fileTemplates.some(f => f.id === t.id)));
+    byId = Object.fromEntries(templates.map(t => [t.id, t]));
+  }
+
+  const isMine = id => mine.some(t => t.id === id);
+  const inFile = id => fileTemplates.some(t => t.id === id);
+
+  function withSlot(slots, i, id) {
+    const next = slots.slice();
+    next[i] = id;
+    return next;
+  }
+
+  function withoutDraft(drafts, i) {
+    const next = { ...drafts };
+    delete next[i];
+    return next;
+  }
+
+  function dropDraftsOf(id) {
+    return Object.fromEntries(Object.entries(state.drafts).filter(([, d]) => d.id !== id));
+  }
+
+  // ---------- 화면 ----------
+  function layout() {
+    const { w, h, mx, my, gap } = state;
+    const cols = Math.max(0, Math.floor((PAGE_W - mx + gap) / (w + gap)));
+    const rows = Math.max(0, Math.floor((PAGE_H - my + gap) / (h + gap)));
+    const cells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) cells.push({ x: mx + c * (w + gap), y: my + r * (h + gap) });
+    }
+    return cells;
+  }
+
+  const slotTpl = i => byId[state.slots[i]];
+  const hasDraft = i => !!(slotTpl(i) && state.drafts[i] && state.drafts[i].id === slotTpl(i).id);
+  const paperOf = i => { const s = document.querySelectorAll('.slot')[i]; return s && s.querySelector('.paper'); };
+  const slotHtml = i => (hasDraft(i) ? state.drafts[i].html : slotTpl(i).html);
+
+  // 칸 내용 html. 사진 선택 표시(picked)는 저장하지 않는다
+  function getHtml(i) {
+    const copy = paperOf(i).cloneNode(true);
+    copy.querySelectorAll('img.picked').forEach(img => {
+      img.classList.remove('picked');
+      if (!img.className) img.removeAttribute('class');
+    });
+    copy.querySelectorAll('svg.draw').forEach(svg => { if (!svg.children.length) svg.remove(); });
+    return copy.innerHTML;
+  }
+
+  let pickedImg = null;        // 크기 조절할 사진
+
+  function render() {
+    const cells = layout();
+    if (sel >= cells.length) sel = 0;
+    pickedImg = null;
+    const page = document.getElementById('page');
+    const slotList = document.getElementById('slots');
+    page.innerHTML = '';
+    slotList.innerHTML = '';
+
+    cells.forEach((cell, i) => {
+      const tpl = slotTpl(i);
+
+      const slot = document.createElement('div');
+      slot.className = 'slot' + (tpl ? '' : ' empty');
+      Object.assign(slot.style, {
+        left: cell.x + 'mm', top: cell.y + 'mm', width: state.w + 'mm', height: state.h + 'mm'
+      });
+      slot.innerHTML = '<div class="frame"></div><div class="no">' + (i + 1) + '</div>'
+        + (tpl ? '' : '<div class="hint">' + (i + 1) + '번 칸<br>왼쪽 목록에서 템플릿 선택</div>');
+      if (tpl) {
+        const paper = document.createElement('div');
+        paper.className = 'paper';
+        paper.contentEditable = 'true';
+        paper.spellcheck = false;
+        paper.innerHTML = slotHtml(i);
+        historyOf(i);
+        paper.addEventListener('input', () => { if (!suppressInput) onEdit(i, getHtml(i), true); });
+        paper.addEventListener('keydown', e => onKey(e, i));
+        paper.addEventListener('paste', onPaste);
+        paper.addEventListener('click', e => {
+          if (!e.altKey) pickImage(e.target.tagName === 'IMG' ? e.target : null);
+        });
+        paper.addEventListener('mousedown', e => onDrawMouseDown(e, i), true);
+        paper.addEventListener('mousedown', e => onImageMouseDown(e, i));
+        paper.addEventListener('dragstart', e => { if (e.target.tagName === 'IMG') e.preventDefault(); });
+        slot.appendChild(paper);
+      } else {
+        delete history[i];
+      }
+      slot.addEventListener('mousedown', () => select(i));
+      page.appendChild(slot);
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      const opt = t => '<option value="' + t.id + '"' + (tpl && tpl.id === t.id ? ' selected' : '') + '>' + t.name + '</option>';
+      const group = (label, list) => (list.length ? '<optgroup label="' + label + '">' + list.map(opt).join('') + '</optgroup>' : '');
+      const opts = '<option value="">비움</option>'
+        + group('기본 템플릿', templates.filter(t => inFile(t.id)))
+        + group('내 템플릿', templates.filter(t => !inFile(t.id)));
+      row.innerHTML = '<span>' + (i + 1) + '</span><select>' + opts + '</select><span class="dot" title="고친 내용 있음"></span>';
+      row.addEventListener('mousedown', () => select(i));
+      row.querySelector('select').addEventListener('change', e => {
+        sel = i;
+        state = { ...state, slots: withSlot(state.slots, i, e.target.value), drafts: withoutDraft(state.drafts, i) };
+        saveState(); render();
+      });
+      slotList.appendChild(row);
+    });
+
+    const credit = document.createElement('div');
+    credit.className = 'credit';
+    credit.textContent = CREDIT;
+    page.appendChild(credit);
+
+    checkOverflow();
+    syncPreset();
+    markSelection();
+    renderPanel();
+  }
+
+  function select(i) {
+    if (sel === i) return;
+    sel = i;
+    markSelection();
+    renderPanel();
+  }
+
+  // 선택 표시와 "고침(노란 점)" 표시만 다시 그린다 (글자 편집 중에 화면을 새로 그리지 않도록)
+  function markSelection() {
+    document.querySelectorAll('.slot').forEach((el, i) => el.classList.toggle('sel', i === sel));
+    document.querySelectorAll('.slots .row').forEach((el, i) => {
+      el.classList.toggle('sel', i === sel);
+      el.querySelector('.dot').classList.toggle('on', hasDraft(i));
+    });
+  }
+
+  function renderPanel() {
+    const tpl = slotTpl(sel);
+    const h = history[sel];
+    const title = document.getElementById('panelTitle');
+    const desc = document.getElementById('panelDesc');
+    title.textContent = (sel + 1) + '번 칸' + (tpl ? ' · ' + tpl.name : '');
+    if (tpl && hasDraft(sel)) {
+      desc.innerHTML = '<span class="badge">수정됨</span>저장하면 템플릿에 반영됩니다';
+    } else {
+      desc.textContent = !tpl ? '비어 있음. 위 목록에서 템플릿을 고르거나 "+ 새 빈 템플릿"'
+        : '포스트잇 글자를 클릭해서 바로 고칠 수 있습니다';
+    }
+
+    const del = document.getElementById('actDelete');
+    del.textContent = tpl && isMine(tpl.id) && inFile(tpl.id) ? '원본으로 되돌리기' : '템플릿 삭제';
+    document.getElementById('actSave').disabled = !tpl;
+    document.getElementById('actSaveAs').disabled = !tpl;
+    document.getElementById('actRename').disabled = !tpl;
+    document.getElementById('actRevert').disabled = !hasDraft(sel);
+    del.disabled = !(tpl && isMine(tpl.id));
+    document.querySelectorAll('.toolbar button[data-cmd]').forEach(b => {
+      const cmd = b.dataset.cmd;
+      b.disabled = !tpl || (cmd === 'undo' && !(h && h.undo.length)) || (cmd === 'redo' && !(h && h.redo.length));
+    });
+    document.querySelectorAll('.emoji button').forEach(b => { b.disabled = !tpl; });
+    document.getElementById('emojiToggle').disabled = !tpl;
+    ['fontDown', 'fontUp', 'fontSize'].forEach(id => { document.getElementById(id).disabled = !tpl; });
+    document.querySelectorAll('#drawTools button, #drawTools select, #drawTools input').forEach(el => { el.disabled = !tpl; });
+    if (!tpl && drawTool) setDrawTool(null);
+    document.getElementById('tbWho').textContent = (sel + 1) + '번 칸' + (tpl ? ' 편집' : ' (비어 있음)');
+
+    const imgHere = !!(pickedImg && paperOf(sel) && paperOf(sel).contains(pickedImg));
+    document.getElementById('imgAdd').disabled = !tpl;
+    document.getElementById('imgDel').disabled = !imgHere;
+    const size = document.getElementById('imgSize');
+    size.disabled = !imgHere;
+    if (imgHere) size.value = parseInt(pickedImg.style.width, 10) || 100;
+    document.getElementById('imgSizeVal').textContent = imgHere ? size.value + '%' : '';
+    const mode = document.getElementById('imgMode');
+    const alpha = document.getElementById('imgAlpha');
+    mode.disabled = alpha.disabled = !imgHere;
+    if (imgHere) {
+      mode.value = imageMode(pickedImg);
+      alpha.value = Math.round((parseFloat(pickedImg.style.opacity) || 1) * 100);
+    }
+  }
+
+  let statusTimer = 0;
+  // 안내 문구: 왼쪽 패널 + 도구줄 아래 가운데(잘 보이게)
+  function flash(msg) {
+    const el = document.getElementById('status');
+    const toast = document.getElementById('toast');
+    el.textContent = msg;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { el.textContent = ''; toast.classList.remove('show'); }, 2500);
+  }
+
+  function syncPreset() {
+    const i = PRESETS.findIndex(p => p.w === state.w && p.h === state.h);
+    document.getElementById('preset').value = i < 0 ? 'custom' : String(i);
+  }
+
+  // 글자가 포스트잇 밖으로 넘치면 빨간 테두리 + 경고
+  function checkOverflow() {
+    const over = [];
+    document.querySelectorAll('.slot').forEach((slot, i) => {
+      const paper = slot.querySelector('.paper');
+      const isOver = !!paper && paper.scrollHeight > paper.clientHeight + 1;
+      slot.classList.toggle('over', isOver);
+      if (isOver) over.push(i + 1);
+    });
+    const warn = document.getElementById('warn');
+    warn.textContent = over.length ? over.join(', ') + '번 칸 글자가 넘칩니다 — 내용을 줄이거나 크기를 키우세요' : '';
+    warn.classList.toggle('show', over.length > 0);
+  }
+
+  // ---------- 편집 · 되돌리기 ----------
+  // 브라우저 기본 되돌리기는 화면을 다시 그리면(크기 변경 등) 꼬이므로 칸마다 직접 기록한다
+  function historyOf(i) {
+    const tpl = slotTpl(i);
+    if (!history[i] || history[i].id !== tpl.id) {
+      history[i] = { id: tpl.id, cur: slotHtml(i), undo: [], redo: [], at: 0 };
+    }
+    return history[i];
+  }
+
+  // 칸 내용이 바뀌었을 때: 기록에 남기고, 템플릿과 다르면 "고친 내용"으로 기억
+  function onEdit(i, html, typed) {
+    const tpl = slotTpl(i);
+    const h = historyOf(i);
+    const now = Date.now();
+    if (!typed || now - h.at > UNDO_GROUP_MS) {
+      h.undo.push(h.cur);
+      if (h.undo.length > UNDO_MAX) h.undo.shift();
+    }
+    h.cur = html;
+    h.redo = [];
+    h.at = typed ? now : 0;
+    setDraft(i, html, tpl);
+  }
+
+  function setDraft(i, html, tpl) {
+    state = {
+      ...state,
+      drafts: html === tpl.html ? withoutDraft(state.drafts, i) : { ...state.drafts, [i]: { id: tpl.id, html: html } }
+    };
+    saveState(); checkOverflow(); markSelection(); renderPanel();
+  }
+
+  function stepHistory(i, back) {
+    const h = history[i];
+    const from = back ? h && h.undo : h && h.redo;
+    if (!from || !from.length) return;
+    (back ? h.redo : h.undo).push(h.cur);
+    h.cur = from.pop();
+    h.at = 0;
+    pickedImg = null;
+    const paper = paperOf(i);
+    paper.innerHTML = h.cur;
+    placeCaretAtEnd(paper);
+    setDraft(i, h.cur, slotTpl(i));
+  }
+
+  function placeCaretAtEnd(el) {
+    el.focus();
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    r.collapse(false);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
+  function onKey(e, i) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { e.preventDefault(); stepHistory(i, true); }
+    else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); stepHistory(i, false); }
+  }
+
+  // 사진이면 사진으로, 아니면 다른 곳의 글꼴·색이 섞이지 않게 글자만 붙인다
+  function onPaste(e) {
+    e.preventDefault();
+    const data = e.clipboardData || window.clipboardData;
+    const imgItem = Array.from(data.items || []).find(it => it.type.startsWith('image/'));
+    if (imgItem) { insertImage(imgItem.getAsFile()); return; }
+    document.execCommand('insertText', false, data.getData('text/plain'));
+  }
+
+  // 지금 글자 커서가 선택한 칸 안에 있는지
+  function caretInSelectedPaper() {
+    const node = window.getSelection().anchorNode;
+    const el = node && (node.nodeType === 1 ? node : node.parentElement);
+    const paper = paperOf(sel);
+    return !!(el && paper && paper.contains(el));
+  }
+
+  // ---------- 사진 ----------
+  // 큰 사진은 IMG_MAX_PX 로 줄여서 넣는다. 커서가 칸 안에 있으면 그 자리에, 아니면 맨 끝에.
+  function insertImage(file) {
+    if (!file || !slotTpl(sel)) return;
+    const keepCaret = caretInSelectedPaper();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, IMG_MAX_PX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        const isPng = /png|gif|svg/.test(file.type);
+        if (!isPng) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const src = isPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.85);
+        const tag = '<img src="' + src + '" style="width:50%">';
+        const paper = paperOf(sel);
+        if (keepCaret && caretInSelectedPaper()) {
+          document.execCommand('insertHTML', false, tag);
+        } else {
+          paper.insertAdjacentHTML('beforeend', tag);
+          onEdit(sel, getHtml(sel), false);
+        }
+        const imgs = paper.querySelectorAll('img');
+        pickImage(Array.from(imgs).find(el => el.getAttribute('src') === src) || null);
+        flash('사진을 넣었습니다 — 아래 "크기"로 조절하세요');
+      };
+      img.onerror = () => alert('사진 파일을 열지 못했습니다.');
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function pickImage(img) {
+    if (pickedImg) pickedImg.classList.remove('picked');
+    pickedImg = img;
+    if (img) img.classList.add('picked');
+    renderPanel();
+  }
+
+  function resizePicked(percent) {
+    pickedImg.style.width = percent + '%';
+    document.getElementById('imgSizeVal').textContent = percent + '%';
+    onEdit(sel, getHtml(sel), true);
+  }
+
+  const imageMode = img => (!img.classList.contains('float') ? 'inline'
+    : img.classList.contains('front') ? 'front' : 'back');
+
+  // 글자처럼 ↔ 자유 배치(배경/앞). 자유 배치는 칸 기준 % 좌표로 저장한다
+  function setImageMode(mode) {
+    const img = pickedImg;
+    const paper = paperOf(sel);
+    if (mode === 'inline') {
+      img.classList.remove('float', 'back', 'front');
+      ['position', 'left', 'top', 'zIndex'].forEach(k => { img.style[k] = ''; });
+      paper.appendChild(img);
+    } else {
+      if (!img.classList.contains('float')) {
+        const pr = paper.getBoundingClientRect(), ir = img.getBoundingClientRect();
+        img.style.left = clampPct((ir.left - pr.left) / pr.width * 100) + '%';
+        img.style.top = clampPct((ir.top - pr.top) / pr.height * 100) + '%';
+        paper.appendChild(img);
+      }
+      img.classList.add('float');
+      img.classList.toggle('back', mode === 'back');
+      img.classList.toggle('front', mode === 'front');
+      img.style.position = 'absolute';
+      img.style.zIndex = mode === 'back' ? '0' : '2';
+    }
+    onEdit(sel, getHtml(sel), false);
+    renderPanel();
+    if (mode !== 'inline') flash('사진을 마우스로 끌어서 옮기세요 (글자에 가려지면 Alt+클릭)');
+  }
+
+  function clampPct(v) {
+    return Math.round(Math.max(-50, Math.min(95, v)) * 10) / 10;
+  }
+
+  // 자유 배치 사진 끌어 옮기기. 배경 사진이 글자에 가려 있으면 Alt+클릭으로 집는다
+  function onImageMouseDown(e, i) {
+    let img = e.target.tagName === 'IMG' && e.target.classList.contains('float') ? e.target : null;
+    if (!img && e.altKey) {
+      img = document.elementsFromPoint(e.clientX, e.clientY)
+        .find(el => el.tagName === 'IMG' && el.classList.contains('float') && paperOf(i).contains(el)) || null;
+    }
+    if (!img) return;
+    e.preventDefault();
+    sel = i;
+    pickImage(img);
+    markSelection();
+
+    const paper = paperOf(i);
+    const pr = paper.getBoundingClientRect();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeft = parseFloat(img.style.left) || 0, startTop = parseFloat(img.style.top) || 0;
+    let moved = false;
+    const onMove = ev => {
+      moved = true;
+      img.style.left = clampPct(startLeft + (ev.clientX - startX) / pr.width * 100) + '%';
+      img.style.top = clampPct(startTop + (ev.clientY - startY) / pr.height * 100) + '%';
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (moved) onEdit(i, getHtml(i), false);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  // ---------- 그리기 ----------
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  let drawTool = null;   // null(글자 모드) | pen | line | rect | ellipse | erase
+
+  function setDrawTool(tool) {
+    drawTool = drawTool === tool ? null : tool;
+    document.body.classList.toggle('drawing', !!drawTool && drawTool !== 'erase');
+    document.body.classList.toggle('tool-erase', drawTool === 'erase');
+    document.querySelectorAll('#drawTools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === drawTool));
+    if (drawTool) {
+      pickImage(null);
+      window.getSelection().removeAllRanges();
+      flash(drawTool === 'erase' ? '지울 도형을 클릭하세요 (Esc: 그만)' : '포스트잇 위를 드래그해서 그리세요 (Esc: 글자 모드)');
+    }
+  }
+
+  function drawLayer(paper) {
+    let svg = paper.querySelector(':scope > svg.draw');
+    if (!svg) {
+      svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'draw');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('contenteditable', 'false');
+      paper.appendChild(svg);
+    }
+    return svg;
+  }
+
+  // 선은 얇아서 정확히 누르기 어렵다 — 누른 곳 주변 몇 px 안의 도형을 찾는다
+  function shapeNear(paper, x, y) {
+    for (const d of [0, 3, 6]) {
+      for (const [dx, dy] of [[0, 0], [d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, -d], [d, -d], [-d, d]]) {
+        const hit = document.elementsFromPoint(x + dx, y + dy)
+          .find(el => el.ownerSVGElement && el.ownerSVGElement.classList.contains('draw') && paper.contains(el));
+        if (hit) return hit;
+      }
+    }
+    return null;
+  }
+
+  function onDrawMouseDown(e, i) {
+    if (!drawTool || e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    select(i);
+    const paper = paperOf(i);
+
+    if (drawTool === 'erase') {
+      const hit = shapeNear(paper, e.clientX, e.clientY);
+      if (!hit) return;
+      const svg = hit.ownerSVGElement;
+      hit.remove();
+      if (!svg.children.length) svg.remove();
+      onEdit(i, getHtml(i), false);
+      return;
+    }
+
+    const box = paper.getBoundingClientRect();
+    const toPct = ev => [
+      Math.max(0, Math.min(100, (ev.clientX - box.left) / box.width * 100)),
+      Math.max(0, Math.min(100, (ev.clientY - box.top) / box.height * 100))
+    ];
+    const r2 = v => String(Math.round(v * 100) / 100);
+    const color = document.getElementById('drawColor').value;
+    const fill = document.getElementById('drawFill').checked;
+    const tag = { pen: 'polyline', line: 'line', rect: 'rect', ellipse: 'ellipse' }[drawTool];
+    const el = document.createElementNS(SVG_NS, tag);
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', document.getElementById('drawWidth').value);
+    el.setAttribute('vector-effect', 'non-scaling-stroke');
+    el.setAttribute('stroke-linecap', 'round');
+    el.setAttribute('stroke-linejoin', 'round');
+    el.setAttribute('fill', (drawTool === 'rect' || drawTool === 'ellipse') && fill ? color : 'none');
+    drawLayer(paper).appendChild(el);
+
+    const [x0, y0] = toPct(e);
+    const points = [[x0, y0]];
+    let size = 0;
+    const update = ev => {
+      let [x, y] = toPct(ev);
+      let dx = x - x0, dy = y - y0;
+      if (ev.shiftKey && (drawTool === 'rect' || drawTool === 'ellipse')) {
+        const side = Math.max(Math.abs(dx) * box.width, Math.abs(dy) * box.height);   // 화면 px 기준 정사각/정원
+        dx = Math.sign(dx || 1) * side / box.width * 100;
+        dy = Math.sign(dy || 1) * side / box.height * 100;
+      }
+      if (ev.shiftKey && drawTool === 'line') {
+        if (Math.abs(dx) * box.width > Math.abs(dy) * box.height) dy = 0; else dx = 0;
+      }
+      size = Math.max(Math.abs(dx), Math.abs(dy));
+      if (drawTool === 'pen') {
+        points.push([x, y]);
+        el.setAttribute('points', points.map(p => r2(p[0]) + ',' + r2(p[1])).join(' '));
+        size = points.length;
+      } else if (drawTool === 'line') {
+        el.setAttribute('x1', r2(x0)); el.setAttribute('y1', r2(y0));
+        el.setAttribute('x2', r2(x0 + dx)); el.setAttribute('y2', r2(y0 + dy));
+      } else if (drawTool === 'rect') {
+        el.setAttribute('x', r2(Math.min(x0, x0 + dx))); el.setAttribute('y', r2(Math.min(y0, y0 + dy)));
+        el.setAttribute('width', r2(Math.abs(dx))); el.setAttribute('height', r2(Math.abs(dy)));
+      } else {
+        el.setAttribute('cx', r2(x0 + dx / 2)); el.setAttribute('cy', r2(y0 + dy / 2));
+        el.setAttribute('rx', r2(Math.abs(dx) / 2)); el.setAttribute('ry', r2(Math.abs(dy) / 2));
+      }
+    };
+    const done = () => {
+      document.removeEventListener('mousemove', update);
+      document.removeEventListener('mouseup', done);
+      if (size < (drawTool === 'pen' ? 2 : 0.8)) {   // 클릭만 하고 뗀 것은 버린다
+        const svg = el.ownerSVGElement;
+        el.remove();
+        if (svg && !svg.children.length) svg.remove();
+        return;
+      }
+      onEdit(i, getHtml(i), false);
+    };
+    update(e);
+    document.addEventListener('mousemove', update);
+    document.addEventListener('mouseup', done);
+  }
+
+  function deletePicked() {
+    pickedImg.remove();
+    pickedImg = null;
+    onEdit(sel, getHtml(sel), false);
+  }
+
+  // ---------- 템플릿 동작 ----------
+  function askName(message, suggested) {
+    return (prompt(message, suggested) || '').trim();
+  }
+
+  // 지금 칸 내용으로 그 템플릿을 덮어쓴다. 파일 템플릿이면 같은 id 의 사본으로 저장된다.
+  function actSave() {
+    const tpl = slotTpl(sel);
+    if (!upsertMine({ id: tpl.id, name: tpl.name, html: getHtml(sel).trim() })) return;
+    state = { ...state, drafts: withoutDraft(state.drafts, sel) };
+    saveState(); render();
+    flash('"' + tpl.name + '" 저장했습니다');
+  }
+
+  function actSaveAs() {
+    const tpl = slotTpl(sel);
+    const name = askName('새 템플릿 이름', tpl.name + ' 2');
+    if (!name) return;
+    const same = templates.find(t => t.name === name);
+    if (same && !confirm('"' + name + '" 이(가) 이미 있습니다. 덮어쓸까요?')) return;
+    const next = { id: same ? same.id : 'my-' + Date.now(), name: name, html: getHtml(sel).trim() };
+    if (!upsertMine(next)) return;
+    state = { ...state, slots: withSlot(state.slots, sel, next.id), drafts: withoutDraft(state.drafts, sel) };
+    saveState(); render();
+    flash('"' + name + '" 로 저장했습니다');
+  }
+
+  function actRename() {
+    const tpl = slotTpl(sel);
+    const name = askName('새 이름', tpl.name);
+    if (!name || name === tpl.name) return;
+    if (!upsertMine({ ...tpl, name: name })) return;
+    render();
+    flash('이름을 "' + name + '" 로 바꿨습니다');
+  }
+
+  // 고친 것 취소도 되돌리기 기록에 남겨서 Ctrl+Z 로 다시 살릴 수 있다
+  function actRevert() {
+    const tpl = slotTpl(sel);
+    onEdit(sel, tpl.html, false);
+    paperOf(sel).innerHTML = tpl.html;
+    checkOverflow();
+    flash('고친 내용을 취소했습니다 (Ctrl+Z 로 다시 살릴 수 있음)');
+  }
+
+  // 내 템플릿 삭제. 파일 템플릿을 고쳐 저장한 것이면 파일 원본으로 되돌린다.
+  function actDelete() {
+    const tpl = slotTpl(sel);
+    const toOriginal = inFile(tpl.id);
+    const ask = toOriginal ? '"' + tpl.name + '" 을(를) 처음 원본으로 되돌릴까요?' : '"' + tpl.name + '" 템플릿을 삭제할까요?';
+    if (!confirm(ask)) return;
+    if (!commitMine(mine.filter(t => t.id !== tpl.id))) return;
+    state = {
+      ...state,
+      slots: toOriginal ? state.slots : state.slots.map(id => (id === tpl.id ? '' : id)),
+      drafts: dropDraftsOf(tpl.id)
+    };
+    Object.keys(history).forEach(k => { if (history[k].id === tpl.id) delete history[k]; });
+    saveState(); render();
+    flash(toOriginal ? '원본으로 되돌렸습니다' : '삭제했습니다');
+  }
+
+  function actNew() {
+    const name = askName('새 템플릿 이름', '새 템플릿');
+    if (!name) return;
+    const next = { id: 'my-' + Date.now(), name: name, html: BLANK_HTML };
+    if (!upsertMine(next)) return;
+    state = { ...state, slots: withSlot(state.slots, sel, next.id), drafts: withoutDraft(state.drafts, sel) };
+    saveState(); render();
+    flash('"' + name + '" 를 만들었습니다 — 포스트잇 글자를 클릭해 고치세요');
+  }
+
+  // 지금 목록 전체를 템플릿.txt 형식으로 내려받기
+  function exportTemplates() {
+    const q = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+    const bt = v => '`' + String(v).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${') + '`';
+    const items = templates.map(t => '  {\n'
+      + '    id: ' + q(t.id) + ',\n'
+      + '    name: ' + q(t.name) + ',\n'
+      + '    html: ' + bt('\n      ' + t.html.trim() + '\n    ') + '\n'
+      + '  }');
+    const text = '/*\n'
+      + ' * StickyPrint 템플릿 — 내보낸 날짜 (' + new Date().toLocaleDateString() + ')\n'
+      + ' * 다른 PC에서는 StickyPrint의 "가져오기"로 열면 된다.\n'
+      + ' * 이 파일로 data 폴더의 템플릿.txt 를 바꾸면 처음부터 들어 있는 템플릿이 된다.\n'
+      + ' */\n'
+      + 'window.POSTIT_TEMPLATES = [\n' + items.join(',\n') + '\n];\n';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    a.download = '템플릿.txt';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    flash('다운로드 폴더에 템플릿.txt 를 받았습니다');
+  }
+
+  // 내보낸 파일(또는 템플릿.txt)을 읽어 내 템플릿으로 추가. 같은 id 는 덮어쓴다.
+  function importTemplates(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let list;
+      try {
+        const box = {};
+        new Function('window', reader.result)(box);
+        list = (box.POSTIT_TEMPLATES || []).filter(t =>
+          t && typeof t.id === 'string' && typeof t.name === 'string' && typeof t.html === 'string');
+      } catch (e) {
+        alert('템플릿 파일을 읽지 못했습니다: ' + e.message);
+        return;
+      }
+      if (!list.length) { alert('파일에 템플릿이 없습니다.'); return; }
+      const ids = list.map(t => t.id);
+      const next = mine.filter(t => !ids.includes(t.id)).concat(list.map(t => ({ id: t.id, name: t.name, html: t.html.trim() })));
+      if (!commitMine(next)) return;
+      render();
+      flash(list.length + '개 템플릿을 가져왔습니다');
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  // ---------- 이벤트 ----------
+  ['w', 'h', 'mx', 'my', 'gap'].forEach(key => {
+    const input = document.getElementById(key);
+    input.value = state[key];
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value);
+      if (!(v >= 0)) return;
+      state = { ...state, [key]: v };
+      saveState(); render();
+    });
+  });
+
+  const presetSel = document.getElementById('preset');
+  presetSel.innerHTML = PRESETS.map((p, i) => '<option value="' + i + '">' + p.name + '</option>').join('')
+    + '<option value="custom">직접 입력</option>';
+  presetSel.addEventListener('change', () => {
+    const p = PRESETS[presetSel.value];
+    if (!p) return;
+    state = { ...state, w: p.w, h: p.h };
+    document.getElementById('w').value = p.w;
+    document.getElementById('h').value = p.h;
+    saveState(); render();
+  });
+
+  // mousedown 을 막아야 포스트잇 안에서 고른 글자 선택이 풀리지 않는다
+  document.querySelectorAll('.toolbar button[data-cmd]').forEach(btn => {
+    btn.addEventListener('mousedown', e => e.preventDefault());
+    btn.addEventListener('click', () => {
+      const cmd = btn.dataset.cmd;
+      if (cmd === 'undo' || cmd === 'redo') { stepHistory(sel, cmd === 'undo'); return; }
+      if (!caretInSelectedPaper()) { flash('포스트잇 안의 글자를 먼저 클릭하거나 드래그하세요'); return; }
+      if (cmd === 'hr') document.execCommand('insertHTML', false, '<hr>');
+      else document.execCommand(cmd);
+    });
+  });
+
+  // 글자 크기: 브라우저 기본 명령은 1~7 단계뿐이라, 7 로 감싼 뒤 pt 크기 span 으로 바꿔 끼운다
+  function applyFontSize(pt) {
+    const s = window.getSelection();
+    if (!caretInSelectedPaper() || s.isCollapsed) { flash('크기를 바꿀 글자를 먼저 드래그하세요'); return; }
+    const paper = paperOf(sel);
+    suppressInput = true;
+    document.execCommand('fontSize', false, '7');
+    suppressInput = false;
+    const spans = Array.from(paper.querySelectorAll('font[size="7"]')).map(f => {
+      const span = document.createElement('span');
+      span.style.fontSize = pt + 'pt';
+      span.innerHTML = f.innerHTML;
+      span.querySelectorAll('[style*="font-size"]').forEach(el => { el.style.fontSize = ''; });
+      f.replaceWith(span);
+      return span;
+    });
+    if (spans.length) {   // 이어서 A+ / A- 를 누를 수 있게 선택을 되살린다
+      const r = document.createRange();
+      const last = spans[spans.length - 1];
+      r.setStart(spans[0], 0);              // 안쪽에서 시작해야 다음 A+ / A- 가 새 크기를 기준으로 한다
+      r.setEnd(last, last.childNodes.length);
+      s.removeAllRanges();
+      s.addRange(r);
+    }
+    onEdit(sel, getHtml(sel), false);
+    syncFontSize();
+  }
+
+  function selectionPt() {
+    const node = window.getSelection().anchorNode;
+    const el = node && (node.nodeType === 1 ? node : node.parentElement);
+    return el ? Math.round(parseFloat(getComputedStyle(el).fontSize) * 0.75) : 0;
+  }
+
+  // 커서 위치 글자 크기를 목록에 표시
+  function syncFontSize() {
+    const pt = caretInSelectedPaper() ? selectionPt() : 0;
+    fontSel.value = FONT_SIZES.includes(pt) ? String(pt) : '';
+  }
+
+  function stepFontSize(dir) {
+    const cur = selectionPt();
+    const next = dir > 0 ? FONT_SIZES.find(v => v > cur) : FONT_SIZES.slice().reverse().find(v => v < cur);
+    if (next) applyFontSize(next);
+  }
+
+  const fontSel = document.getElementById('fontSize');
+  fontSel.innerHTML = '<option value="">크기</option>' + FONT_SIZES.map(v => '<option value="' + v + '">' + v + '</option>').join('');
+  // 목록을 여는 순간 글자 선택이 풀리므로 미리 기억했다가 되살린다
+  let rangeBeforeFont = null;
+  fontSel.addEventListener('mousedown', () => {
+    const s = window.getSelection();
+    rangeBeforeFont = caretInSelectedPaper() && s.rangeCount ? s.getRangeAt(0).cloneRange() : null;
+  });
+  fontSel.addEventListener('change', () => {
+    const pt = parseInt(fontSel.value, 10);
+    if (rangeBeforeFont && paperOf(sel)) {
+      paperOf(sel).focus();
+      const s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(rangeBeforeFont);
+    }
+    if (pt) applyFontSize(pt);
+  });
+  ['fontDown', 'fontUp'].forEach((id, k) => {
+    const b = document.getElementById(id);
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => {
+      if (!caretInSelectedPaper() || window.getSelection().isCollapsed) { flash('크기를 바꿀 글자를 먼저 드래그하세요'); return; }
+      stepFontSize(k ? 1 : -1);
+    });
+  });
+  document.addEventListener('selectionchange', syncFontSize);
+
+  // 글자색: 동그라미 = 자주 쓰는 색, 맨 끝 = 다른 색 고르기
+  function applyColor(color) {
+    if (drawTool && drawTool !== 'erase') {
+      document.getElementById('drawColor').value = color;
+      flash('그리기 색을 바꿨습니다');
+      return;
+    }
+    if (!caretInSelectedPaper()) { flash('색을 바꿀 글자를 먼저 드래그하세요'); return; }
+    document.execCommand('foreColor', false, color);
+  }
+  const colorBox = document.getElementById('colors');
+  const colorPick = document.getElementById('colorPick');
+  COLORS.forEach(c => {
+    const b = document.createElement('button');
+    b.style.background = c;
+    b.title = c;
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => applyColor(c));
+    colorBox.insertBefore(b, colorBox.querySelector('.pick'));
+  });
+  // 색 고르기 창이 열리면 글자 선택이 풀리므로 미리 기억했다가 되살린다
+  let rangeBeforeColor = null;
+  colorBox.querySelector('.pick').addEventListener('mousedown', () => {
+    const s = window.getSelection();
+    rangeBeforeColor = caretInSelectedPaper() && s.rangeCount && !s.isCollapsed ? s.getRangeAt(0).cloneRange() : null;
+    if (!rangeBeforeColor) flash('색을 바꿀 글자를 먼저 드래그한 뒤 색 고르기 칸을 누르세요');
+  });
+  // 색 고르기 창에서 색을 움직이는 동안 바로 적용한다 (창을 닫을 때만 바뀌면 안 되는 것처럼 보임)
+  function applyPickedColor() {
+    if (!rangeBeforeColor || !paperOf(sel)) return;
+    paperOf(sel).focus();
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(rangeBeforeColor);
+    document.execCommand('foreColor', false, colorPick.value);
+    if (s.rangeCount) rangeBeforeColor = s.getRangeAt(0).cloneRange();   // 다음 색도 같은 글자에
+  }
+  colorPick.addEventListener('input', applyPickedColor);
+  colorPick.addEventListener('change', applyPickedColor);
+
+  const emojiBox = document.getElementById('emoji');
+  emojiBox.innerHTML = EMOJIS.map(e => '<button>' + e + '</button>').join('');
+  emojiBox.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('mousedown', e => e.preventDefault());
+    btn.addEventListener('click', () => {
+      if (!caretInSelectedPaper()) { flash('포스트잇 안 넣을 자리를 먼저 클릭하세요'); return; }
+      document.execCommand('insertText', false, btn.textContent);
+      emojiBox.classList.remove('open');
+    });
+  });
+  const emojiToggle = document.getElementById('emojiToggle');
+  emojiToggle.addEventListener('mousedown', e => e.preventDefault());
+  emojiToggle.addEventListener('click', () => emojiBox.classList.toggle('open'));
+  document.addEventListener('mousedown', e => {
+    if (!e.target.closest('.tb-pop')) emojiBox.classList.remove('open');
+  });
+
+  const imgFile = document.getElementById('imgFile');
+  let caretBeforePick = null;   // 파일 창이 열리면 커서가 사라지므로 미리 기억
+  document.getElementById('imgAdd').addEventListener('mousedown', e => {
+    e.preventDefault();
+    const s = window.getSelection();
+    caretBeforePick = caretInSelectedPaper() && s.rangeCount ? s.getRangeAt(0).cloneRange() : null;
+  });
+  document.getElementById('imgAdd').addEventListener('click', () => imgFile.click());
+  imgFile.addEventListener('change', () => {
+    if (caretBeforePick && paperOf(sel)) {
+      paperOf(sel).focus();
+      const s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(caretBeforePick);
+    }
+    if (imgFile.files[0]) insertImage(imgFile.files[0]);
+    imgFile.value = '';
+  });
+  document.getElementById('imgSize').addEventListener('input', e => {
+    if (pickedImg) resizePicked(e.target.value);
+  });
+  document.getElementById('imgDel').addEventListener('click', () => { if (pickedImg) deletePicked(); });
+  document.querySelectorAll('#drawTools [data-tool]').forEach(b => {
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => setDrawTool(b.dataset.tool));
+  });
+  document.getElementById('imgMode').addEventListener('change', e => { if (pickedImg) setImageMode(e.target.value); });
+  document.getElementById('imgAlpha').addEventListener('input', e => {
+    if (!pickedImg) return;
+    pickedImg.style.opacity = e.target.value >= 100 ? '' : String(e.target.value / 100);
+    onEdit(sel, getHtml(sel), true);
+  });
+
+  document.getElementById('actSave').addEventListener('click', actSave);
+  document.getElementById('actSaveAs').addEventListener('click', actSaveAs);
+  document.getElementById('actRename').addEventListener('click', actRename);
+  document.getElementById('actRevert').addEventListener('click', actRevert);
+  document.getElementById('actDelete').addEventListener('click', actDelete);
+  document.getElementById('actNew').addEventListener('click', actNew);
+
+  document.getElementById('export').addEventListener('click', exportTemplates);
+  const importFile = document.getElementById('importFile');
+  document.getElementById('import').addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', () => {
+    if (importFile.files[0]) importTemplates(importFile.files[0]);
+    importFile.value = '';
+  });
+
+  document.getElementById('clear').addEventListener('click', () => {
+    state = { ...state, slots: [], drafts: {} };
+    saveState(); render();
+  });
+
+  document.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      document.body.className = 'm-' + mode;
+      document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b === btn));
+      if (mode !== 'preview') window.print();
+    });
+  });
+
+  render();
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();   // 브라우저의 "페이지 저장" 대신 템플릿 저장
+      if (slotTpl(sel)) actSave();
+    } else if (e.key === 'Escape') {
+      if (helpModal.classList.contains('open')) { closeHelp(); return; }
+      emojiBox.classList.remove('open');
+      if (drawTool) setDrawTool(null);
+      if (pickedImg) pickImage(null);
+    }
+  });
+
+  // 설치 프로그램이면 버전 표시 (업데이트가 됐는지 확인용)
+  if (window.__TAURI__ && window.__TAURI__.app) {
+    window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' v' + v; }).catch(() => {});
+  }
+
+  // 사용법 창: 왼쪽 위 버튼으로 열고, 처음 실행할 때 한 번은 자동으로 연다
+  const helpModal = document.getElementById('help');
+  const HELP_SEEN_KEY = STORE_KEY + '-help-seen';
+  function openHelp() {
+    helpModal.classList.add('open');
+    helpModal.setAttribute('aria-hidden', 'false');
+    document.getElementById('helpClose').focus();
+  }
+  function closeHelp() {
+    helpModal.classList.remove('open');
+    helpModal.setAttribute('aria-hidden', 'true');
+    try { localStorage.setItem(HELP_SEEN_KEY, '1'); } catch (e) { /* 무시 */ }
+  }
+  document.getElementById('helpOpen').addEventListener('click', openHelp);
+  document.getElementById('helpClose').addEventListener('click', closeHelp);
+  helpModal.addEventListener('mousedown', e => { if (e.target === helpModal) closeHelp(); });
+  function helpSeen() {
+    try { return !!localStorage.getItem(HELP_SEEN_KEY); } catch (e) { return true; }
+  }
+
+  // 시작 화면: 잠깐 보여 주고 사라진다. 클릭하면 바로 닫힌다
+  const splash = document.getElementById('splash');
+  const closeSplash = () => {
+    if (!document.getElementById('splash')) return;
+    splash.classList.add('hide');
+    setTimeout(() => {
+      splash.remove();
+      if (!helpSeen()) openHelp();
+    }, 500);
+  };
+  splash.addEventListener('click', closeSplash);
+  setTimeout(closeSplash, 1750);
+</script>
+</body>
+</html>

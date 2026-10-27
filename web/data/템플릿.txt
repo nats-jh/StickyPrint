@@ -1,0 +1,65 @@
+/*
+ * StickyPrint 기본 템플릿
+ *
+ * 새 템플릿은 아래 { ... } 묶음 하나를 복사해서 붙여 넣고 고친다.
+ *   id   : 겹치지 않는 영문 이름 (저장된 배치가 이 값으로 기억됨)
+ *   name : 화면 목록에 보일 이름
+ *   html : 포스트잇에 찍힐 내용
+ *
+ * html 안에서 쓸 수 있는 모양
+ *   <h1>제목</h1>
+ *   <div class="sub">부제목·작은 설명</div>
+ *   <p>본문</p>            <b>굵게</b>
+ *   <span class="blank">직접 입력</span>   ← 밑줄 칸
+ *   <p class="note">※ 주의 문구</p>
+ *   <div class="foot">맨 아래 줄 (위에 구분선)</div>
+ *
+ * 맨 앞에 있는 템플릿이 처음 열었을 때 1번 칸에 들어간다.
+ *
+ * 저장 후 StickyPrint.html 을 새로고침하면 바로 반영된다.
+ * (화면에서 바로 고치고 "저장"해도 된다 — 이 파일은 처음 들어 있는 기본 템플릿)
+ */
+window.POSTIT_TEMPLATES = [
+  {
+    id: 'todo',
+    name: '오늘 할 일',
+    html: `
+      <h1>오늘 할 일</h1>
+      <p>□ <span class="blank">&nbsp;</span><br>
+         □ <span class="blank">&nbsp;</span><br>
+         □ <span class="blank">&nbsp;</span><br>
+         □ <span class="blank">&nbsp;</span><br>
+         □ <span class="blank">&nbsp;</span></p>
+      <div class="foot">날짜 : <span class="blank">&nbsp;</span></div>
+    `
+  },
+  {
+    id: 'shopping',
+    name: '장보기 목록',
+    html: `
+      <h1>장보기 목록</h1>
+      <p>□ 우유 &nbsp; □ 계란<br>
+         □ 두부 &nbsp; □ 대파<br>
+         □ 휴지 &nbsp; □ 세제</p>
+      <p class="note">※ 할인 쿠폰 챙기기</p>
+    `
+  },
+  {
+    id: 'wifi',
+    name: '와이파이 안내',
+    html: `
+      <h1>와이파이 안내</h1>
+      <p><b>이름</b> &nbsp; <span class="blank">직접 입력</span></p>
+      <p><b>비밀번호</b> &nbsp; <span class="blank">직접 입력</span></p>
+      <p class="note">※ 연결이 안 되면 공유기를 껐다 켜 주세요</p>
+    `
+  },
+  {
+    id: 'free',
+    name: '빈 메모 (화면에서 직접 입력)',
+    html: `
+      <h1>제목</h1>
+      <p>내용</p>
+    `
+  }
+];
