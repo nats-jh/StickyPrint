@@ -121,6 +121,13 @@
   .pd-steps b { color: #fff; }
   .pd-field { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 12px; color: #9aa4af; }
   .pd-field select { padding: 9px 10px; border-radius: 8px; background: #14171a; color: #fff; border: 1px solid #3a4048; font-size: 13.5px; font-family: inherit; }
+  .pd-seg { display: flex; padding: 3px; gap: 3px; border-radius: 9px; background: #14171a; border: 1px solid #3a4048; }
+  .pd-seg button { flex: 1; padding: 7px 0; border: 1px solid transparent; border-radius: 6px; background: none; color: #9aa4af; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .pd-seg button:hover:not(:disabled):not(.on) { background: #22272d; color: #e6e6e6; }
+  .pd-seg button.on { background: #22344d; border-color: #4c9aff; color: #fff; }
+  .pd-seg button:disabled { color: #4f5761; cursor: default; }
+  .pd-note { min-height: 0; font-size: 11.5px; color: #8b95a1; }
+  .pd-note:empty { display: none; }
   .pd-msg { min-height: 18px; margin: 8px 0 0; font-size: 12.5px; color: #ff9b9b; }
   .pd-msg button { margin-left: 6px; padding: 0; border: 0; background: none; color: #8fbaff; font: inherit; text-decoration: underline; cursor: pointer; }
   .pd-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
@@ -468,6 +475,8 @@
   #tableOpts button img { width: 22px; height: 22px; display: block; pointer-events: none; }
   #tableOpts button.danger:hover:not(:disabled) { background: #3a1f22; border-color: #5c2b30; }
   /* 표 버튼에 마우스를 올리면 실제 표 위에 결과를 미리 보여준다 */
+  .paper[data-rs="col"], body.rs-col, body.rs-col * { cursor: col-resize !important; }
+  .paper[data-rs="row"], body.rs-row, body.rs-row * { cursor: row-resize !important; }
   .tbl-preview { position: absolute; z-index: 4; pointer-events: none; border-radius: 2px; display: none; }
   .tbl-preview.add { background: #4c9aff; box-shadow: 0 0 0 2px rgba(76,154,255,.25); }
   .tbl-preview.del { background: rgba(229,72,77,.16); outline: 2px solid #e5484d; outline-offset: -1px; }
@@ -675,6 +684,14 @@
       <span>프린터</span>
       <select id="pdPrinter"></select>
     </label>
+    <div class="pd-field">
+      <span>색</span>
+      <div class="pd-seg" id="pdColor" role="radiogroup" aria-label="색">
+        <button type="button" role="radio" data-gray="0">컬러</button>
+        <button type="button" role="radio" data-gray="1">흑백</button>
+      </div>
+      <small class="pd-note" id="pdColorNote"></small>
+    </div>
     <p class="pd-msg" id="pdMsg"></p>
     <div class="pd-acts">
       <button class="pd-cancel" id="pdCancel">취소</button>
@@ -1175,6 +1192,9 @@
           if (!e.altKey) pickImage(e.target.tagName === 'IMG' ? e.target : null);
         });
         paper.addEventListener('mousedown', e => onDrawMouseDown(e, i), true);
+        paper.addEventListener('mousedown', e => onTableResizeDown(e, i), true);
+        paper.addEventListener('mousemove', e => onTableHover(e, paper));
+        paper.addEventListener('mouseleave', () => delete paper.dataset.rs);
         paper.addEventListener('mousedown', e => onImageMouseDown(e, i));
         paper.addEventListener('dragstart', e => { if (e.target.tagName === 'IMG') e.preventDefault(); });
         slot.appendChild(paper);
@@ -2329,7 +2349,11 @@
   function addRow(td) {
     const tr = td.parentElement;
     const nr = document.createElement('tr');
-    for (let k = 0; k < tr.cells.length; k++) nr.appendChild(emptyCell());
+    for (let k = 0; k < tr.cells.length; k++) {
+      const c = emptyCell();
+      if (tr.cells[k].style.width) c.style.width = tr.cells[k].style.width;
+      nr.appendChild(c);
+    }
     tr.after(nr);
     return nr.cells[td.cellIndex];
   }
@@ -2337,8 +2361,10 @@
   const TABLE_OPS = {
     row: addRow,
     col: td => {
-      const k = td.cellIndex;
-      Array.from(td.closest('table').rows).forEach(tr => tr.cells[k].after(emptyCell()));
+      const k = td.cellIndex, table = td.closest('table'), pcts = colPcts(table);
+      Array.from(table.rows).forEach(tr => tr.cells[k].after(emptyCell()));
+      // 폭을 맞춘 표면 고른 칸의 폭을 반씩 나눈다
+      if (pcts) setColPcts(table, pcts.slice(0, k).concat(pcts[k] / 2, pcts[k] / 2, pcts.slice(k + 1)));
       return td.parentElement.cells[k + 1];
     },
     delRow: td => {
@@ -2351,7 +2377,9 @@
     delCol: td => {
       const k = td.cellIndex, tr = td.parentElement, table = tr.closest('table');
       if (tr.cells.length === 1) return TABLE_OPS.delTable(td);
+      const pcts = colPcts(table);
       Array.from(table.rows).forEach(r => r.cells[k].remove());
+      if (pcts) setColPcts(table, pcts.filter((_, j) => j !== k));
       return tr.cells[Math.min(k, tr.cells.length - 1)];
     },
     delTable: td => { td.closest('table').remove(); return null; }
@@ -2397,6 +2425,82 @@
     Object.assign(tablePreview.style, { display: 'block', left: box[0] + 'px', top: box[1] + 'px', width: box[2] + 'px', height: box[3] + 'px' });
   }
   function hideTablePreview() { tablePreview.style.display = 'none'; }
+
+  // ---------- 표 칸 폭, 줄 높이를 테두리 드래그로 ----------
+  // 열 폭은 %(표 전체 대비)로 모든 줄의 칸에, 줄 높이는 mm 로 줄에 적는다. 인쇄해도 같은 크기
+  const EDGE_PX = 4;          // 테두리에서 이 거리(화면 px) 안을 누르면 잡힌다
+  const MIN_COL_MM = 4, MIN_ROW_MM = 5;
+  const PX_PER_MM = 96 / 25.4;
+
+  function colPcts(table) {
+    const cells = Array.from(table.rows[0].cells);
+    return cells.every(c => c.style.width.endsWith('%')) ? cells.map(c => parseFloat(c.style.width)) : null;
+  }
+  function setColPcts(table, pcts) {
+    const sum = pcts.reduce((a, b) => a + b, 0) || 1;
+    Array.from(table.rows).forEach(tr => Array.from(tr.cells).forEach((c, j) => {
+      if (j < pcts.length) c.style.width = (pcts[j] / sum * 100).toFixed(2) + '%';
+    }));
+  }
+
+  // 눌린 곳이 칸 경계(열 사이 세로선, 줄 아래 가로선) 근처인지
+  function tableEdge(e, paper) {
+    if (drawTool || !e.target.closest) return null;
+    const td = e.target.closest('td');
+    const table = td && td.closest('table.tbl');
+    if (!table || !paper.contains(table)) return null;
+    const b = td.getBoundingClientRect(), tr = td.parentElement, last = tr.cells.length - 1;
+    if (td.cellIndex < last && b.right - e.clientX <= EDGE_PX) return { type: 'col', table, k: td.cellIndex };
+    if (td.cellIndex > 0 && e.clientX - b.left <= EDGE_PX) return { type: 'col', table, k: td.cellIndex - 1 };
+    if (b.bottom - e.clientY <= EDGE_PX) return { type: 'row', table, tr };
+    if (tr.rowIndex > 0 && e.clientY - b.top <= EDGE_PX) return { type: 'row', table, tr: table.rows[tr.rowIndex - 1] };
+    return null;
+  }
+
+  function onTableHover(e, paper) {
+    if (e.buttons) return;
+    const edge = tableEdge(e, paper);
+    if (edge) paper.dataset.rs = edge.type; else delete paper.dataset.rs;
+  }
+
+  function onTableResizeDown(e, i) {
+    if (e.button !== 0) return;
+    const paper = paperOf(i);
+    const edge = tableEdge(e, paper);
+    if (!edge) return;
+    e.preventDefault();
+    e.stopPropagation();
+    select(i);
+    const k = paper.getBoundingClientRect().width / paper.offsetWidth || 1;   // 화면 배율
+    const startX = e.clientX, startY = e.clientY;
+    let onMove;
+    if (edge.type === 'col') {
+      const widths = Array.from(edge.table.rows[0].cells, c => c.getBoundingClientRect().width);
+      const pair = widths[edge.k] + widths[edge.k + 1], min = MIN_COL_MM * PX_PER_MM * k;
+      if (pair < min * 2) return;
+      onMove = ev => {
+        const a = Math.min(Math.max(widths[edge.k] + ev.clientX - startX, min), pair - min);
+        setColPcts(edge.table, widths.map((w, j) => j === edge.k ? a : j === edge.k + 1 ? pair - a : w));
+      };
+    } else {
+      const h0 = edge.tr.getBoundingClientRect().height;
+      onMove = ev => {
+        const mm = Math.max((h0 + ev.clientY - startY) / k / PX_PER_MM, MIN_ROW_MM);
+        edge.tr.style.height = mm.toFixed(1) + 'mm';
+      };
+    }
+    let moved = false;
+    const move = ev => { moved = true; onMove(ev); };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      document.body.classList.remove('rs-col', 'rs-row');
+      if (moved) onEdit(i, getHtml(i), false);
+    };
+    document.body.classList.add('rs-' + edge.type);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  }
 
   // Tab: 다음 칸, Shift+Tab: 앞 칸. 마지막 칸에서 Tab 을 누르면 줄이 하나 늘어난다
   function tabCell(back) {
@@ -2491,7 +2595,7 @@
   window.addEventListener('afterprint', () => setMode('preview'));
 
   // ---------- 우리 인쇄 창 (설치 프로그램) ----------
-  // 프린터만 고르면 된다. A4, 배율 100%, 여백 없음, 머리글 없음은 앱이 고정한다.
+  // 프린터와 컬러/흑백만 고르면 된다. A4, 배율 100%, 여백 없음, 머리글 없음은 앱이 고정한다.
   const printDlg = document.getElementById('printDlg');
   const PRINT_TEXT = {
     frame: {
@@ -2520,6 +2624,7 @@
     go.querySelector('span').textContent = '인쇄';
     printDlg.classList.add('open');
     printDlg.setAttribute('aria-hidden', 'false');
+    showPrintColor();
     const sel = document.getElementById('pdPrinter');
     // 새로 연결한 프린터도 보이게 열 때마다 다시 찾는다 (처음만 "찾는 중")
     if (!printers) sel.innerHTML = '<option>프린터를 찾는 중…</option>';
@@ -2536,8 +2641,38 @@
     sel.innerHTML = names.map(n => '<option></option>').join('');
     [...sel.options].forEach((o, i) => { o.value = names[i]; o.textContent = names[i] + (names[i] === printers.default ? '  (기본)' : ''); });
     sel.value = remembered && names.includes(remembered) ? remembered : names[0];
+    syncPrintColor();
     go.focus();
   }
+
+  // 컬러/흑백. 흑백 프린터면 컬러를 막는다 (모르면 둘 다 고를 수 있게)
+  let printerIsColor = null, colorAsk = 0;
+  function showPrintColor() {
+    const gray = !!state.printGray || printerIsColor === false;
+    document.querySelectorAll('#pdColor button').forEach(b => {
+      const on = (b.dataset.gray === '1') === gray;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
+      b.disabled = b.dataset.gray === '0' && printerIsColor === false;
+    });
+    document.getElementById('pdColorNote').textContent = printerIsColor === false ? '흑백 프린터라 흑백으로만 찍힙니다' : '';
+  }
+  async function syncPrintColor() {
+    const name = document.getElementById('pdPrinter').value, ask = ++colorAsk;
+    printerIsColor = null;
+    showPrintColor();
+    let color = null;
+    try { color = await window.__TAURI__.core.invoke('printer_color', { printer: name }); } catch (e) { color = null; }
+    if (ask !== colorAsk) return;
+    printerIsColor = color;
+    showPrintColor();
+  }
+  document.getElementById('pdPrinter').addEventListener('change', syncPrintColor);
+  document.querySelectorAll('#pdColor button').forEach(b => b.addEventListener('click', () => {
+    state = { ...state, printGray: b.dataset.gray === '1' };
+    saveState();
+    showPrintColor();
+  }));
 
   function closePrintDialog() {
     printJob++;   // 보내는 중에 닫았으면 그 결과는 무시
@@ -2575,7 +2710,7 @@
     try {
       setMode(printMode);   // 찍을 모습(점선만, 내용만)으로 바꾸고 화면에 반영된 뒤 보낸다
       await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)); setTimeout(r, 100); });
-      await window.__TAURI__.core.invoke('print_page', { printer: printer });
+      await window.__TAURI__.core.invoke('print_page', { printer: printer, gray: !!state.printGray || printerIsColor === false });
       if (job !== printJob) return;
       closePrintDialog();
       flash(PRINT_TEXT[printMode].title + '를 프린터로 보냈습니다');

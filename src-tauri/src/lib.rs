@@ -127,16 +127,32 @@ async fn list_printers() -> Printers {
   .unwrap_or(Printers { names: vec![], default: None })
 }
 
+// 고른 프린터가 컬러를 찍을 수 있는지. 모르면 None (꺼진 네트워크 프린터는 오래 걸릴 수 있어 목록과 따로 묻는다)
 #[tauri::command]
-async fn print_page(window: tauri::WebviewWindow, printer: String) -> Result<(), String> {
+async fn printer_color(printer: String) -> Option<bool> {
+  tauri::async_runtime::spawn_blocking(move || {
+    #[cfg(windows)]
+    return winprint::is_color(&printer);
+    #[cfg(not(windows))]
+    {
+      let _ = printer;
+      None
+    }
+  })
+  .await
+  .unwrap_or(None)
+}
+
+#[tauri::command]
+async fn print_page(window: tauri::WebviewWindow, printer: String, gray: bool) -> Result<(), String> {
   let (tx, rx) = std::sync::mpsc::channel::<Result<(), String>>();
   window
     .with_webview(move |webview| {
       #[cfg(windows)]
-      winprint::print(webview, &printer, tx);
+      winprint::print(webview, &printer, gray, tx);
       #[cfg(not(windows))]
       {
-        let _ = (webview, printer);
+        let _ = (webview, printer, gray);
         let _ = tx.send(Err("이 운영체제에서는 바로 인쇄를 지원하지 않습니다".into()));
       }
     })
@@ -297,7 +313,16 @@ mod winprint {
     }
   }
 
-  pub fn print(webview: tauri::webview::PlatformWebview, printer: &str, tx: Sender<Result<(), String>>) {
+  pub fn is_color(printer: &str) -> Option<bool> {
+    use windows::Win32::Storage::Xps::{DeviceCapabilitiesW, DC_COLORDEVICE};
+    match unsafe { DeviceCapabilitiesW(&HSTRING::from(printer), PCWSTR::null(), DC_COLORDEVICE, None, None) } {
+      1 => Some(true),
+      0 => Some(false),
+      _ => None,
+    }
+  }
+
+  pub fn print(webview: tauri::webview::PlatformWebview, printer: &str, gray: bool, tx: Sender<Result<(), String>>) {
     let fail = tx.clone();
     let result = (|| -> windows::core::Result<()> {
       unsafe {
@@ -317,6 +342,7 @@ mod winprint {
         let settings2: ICoreWebView2PrintSettings2 = settings.cast()?;
         settings2.SetPrinterName(&HSTRING::from(printer))?;
         settings2.SetCopies(1)?;
+        settings2.SetColorMode(if gray { COREWEBVIEW2_PRINT_COLOR_MODE_GRAYSCALE } else { COREWEBVIEW2_PRINT_COLOR_MODE_COLOR })?;
         let handler = PrintCompletedHandler::create(Box::new(move |error, status| {
           let result = match error {
             Err(e) => Err(e.message().to_string()),
@@ -394,6 +420,16 @@ mod tests {
     }
   }
 
+  // 실제 PC 에서 확인용: cargo test print_printer_colors -- --ignored --nocapture
+  #[cfg(windows)]
+  #[test]
+  #[ignore]
+  fn print_printer_colors() {
+    for name in super::winprint::list().0 {
+      println!("{} {:?}", name, super::winprint::is_color(&name));
+    }
+  }
+
   #[test]
   fn hotfix_order() {
     assert!(newer("1.0.2", "1.0.2+1"));
@@ -455,6 +491,7 @@ pub fn run() {
       check_update,
       install_update,
       list_printers,
+      printer_color,
       print_page,
       monitor_info,
       quit_app

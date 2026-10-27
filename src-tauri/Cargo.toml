@@ -1,6 +1,6 @@
 [package]
 name = "stickyprint"
-version = "1.0.2"
+version = "1.0.2+1"
 description = "StickyPrint - 포스트잇 인쇄 도우미"
 authors = ["kangjoonhyuk"]
 license = "MIT"
@@ -32,4 +32,4 @@ semver = "1"
 # 인쇄 창 없이 바로 인쇄, 프린터 목록 (tauri 가 쓰는 것과 같은 버전)
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.39"
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Printing", "Win32_Graphics_Gdi", "Win32_System_Registry"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Printing", "Win32_Graphics_Gdi", "Win32_System_Registry", "Win32_Storage_Xps"] }
