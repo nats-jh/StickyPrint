@@ -111,6 +111,14 @@
   }
   aside h2 { font-size: 12px; color: #9aa4af; margin: 20px 0 8px; font-weight: 600; letter-spacing: .04em; }
   aside h2:first-child { margin-top: 0; }
+  details.sec { margin-top: 18px; padding-top: 12px; border-top: 1px solid #2c3238; }
+  details.sec > summary { list-style: none; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary h2 { margin: 0; }
+  details.sec > summary svg { width: 16px; height: 16px; color: #8b95a1; margin-top: 2px; transition: transform .18s; }
+  details.sec[open] > summary svg { transform: rotate(180deg); }
+  details.sec > summary:hover h2, details.sec > summary:hover svg { color: #cfd6dd; }
+  .sec-body { margin-top: 10px; animation: ctx-in .16s ease-out; }
   aside h2 .h2-sub { display: block; margin-top: 3px; font-size: 11px; font-weight: 400; color: #6f7882; letter-spacing: 0; }
   aside button { font-family: inherit; }
 
@@ -191,19 +199,31 @@
   .made .copy { display: block; margin-top: 2px; }
 
   /* ---------- A4 ---------- */
-  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  .zoombar {
+    position: absolute; right: 18px; bottom: 18px; z-index: 8; display: flex; align-items: center; gap: 2px; padding: 4px;
+    background: rgba(31, 35, 40, .92); border: 1px solid #3a4048; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    backdrop-filter: blur(6px);
+  }
+  .zoombar button {
+    min-width: 30px; height: 28px; padding: 0 6px; border: 0; border-radius: 7px; background: none; color: #cfd6dd;
+    display: grid; place-items: center; cursor: pointer; font: 600 12px/1 inherit;
+  }
+  .zoombar button:hover { background: #2b3138; color: #fff; }
+  .zoombar svg { width: 15px; height: 15px; }
+  .zoombar .zval { min-width: 50px; }
   .scroll { flex: 1; overflow: auto; padding: 24px 0; }
 
   /* ---------- 편집 도구줄 ---------- */
   .toolbar {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 8px 14px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px 7px; padding: 8px 12px;
     background: #1f2328; border-bottom: 1px solid #3a4048; color: #e6e6e6; font-size: 13px;
     position: relative; z-index: 5;
   }
-  .tb-who { font-weight: 700; min-width: 120px; }
-  .tb-group { display: flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid #3a4048; }
+  .tb-who { font-weight: 700; white-space: nowrap; margin-right: 2px; }
+  .tb-group { display: flex; align-items: center; gap: 3px; padding-left: 7px; border-left: 1px solid #3a4048; }
   .toolbar button {
-    min-width: 32px; height: 30px; padding: 0 8px; background: #2b3138; color: #fff;
+    min-width: 30px; height: 30px; padding: 0 7px; background: #2b3138; color: #fff;
     border: 1px solid #3a4048; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: inherit;
     white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   }
@@ -211,7 +231,7 @@
   .toolbar button svg { width: 16px; height: 16px; vertical-align: middle; }
   .toolbar .caret svg { width: 12px; height: 12px; }
   .toolbar button:disabled { opacity: .35; cursor: default; background: #2b3138; }
-  .toolbar .colors button { width: 22px; min-width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid #3a4048; }
+  .toolbar .colors button { width: 20px; min-width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 2px solid #3a4048; }
   .toolbar .colors button:hover { border-color: #fff; }
   .toolbar .pick { display: flex; align-items: center; gap: 2px; cursor: pointer; margin-left: 4px; color: #b8c0c8; }
   .toolbar .pick svg { width: 15px; height: 15px; }
@@ -224,6 +244,10 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   .tb-pop { position: relative; }
+  /* 상황별 옵션: 그리기 도구를 켰을 때, 사진을 골랐을 때만 나타난다 */
+  .ctx { display: none; align-items: center; gap: 4px; margin-left: 4px; padding-left: 8px; border-left: 1px dashed #3a4048; }
+  body.drawing #drawOpts, body.img-picked #imgOpts { display: flex; animation: ctx-in .16s ease-out; }
+  @keyframes ctx-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
   .toolbar button.on { border-color: #4c9aff; background: #22344d; color: #fff; }
   .chk { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #b8c0c8; white-space: nowrap; cursor: pointer; }
   .chk input { margin: 0; }
@@ -260,8 +284,28 @@
   }
   .slot.empty .frame { border-color: #ccc; }
   .slot.empty .paper { display: none; }
+  .slot:not(.sel):hover .frame { outline-color: rgba(76, 154, 255, .35); outline-offset: 1.5mm; }
+  .add-tpl {
+    padding: 2mm 3.5mm; border: 0.3mm dashed #b9c2cc; border-radius: 2mm; background: #fff; color: #5b6570;
+    font: 600 9pt/1.2 inherit; cursor: pointer; transition: border-color .15s, color .15s, background-color .15s;
+  }
+  .add-tpl:hover { border-color: #4c9aff; color: #2a6fd6; background: #f4f8ff; }
+  .tpl-menu {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6;
+    min-width: 72%; max-height: 92%; overflow: auto; padding: 5px; display: flex; flex-direction: column; gap: 1px;
+    background: #1f2328; border: 1px solid #3a4048; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    animation: menu-in .14s ease-out; cursor: default;
+  }
+  @keyframes menu-in { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } to { opacity: 1; transform: translate(-50%, -50%); } }
+  .tpl-menu .grp { padding: 5px 9px 2px; font-size: 10.5px; color: #8b95a1; }
+  .tpl-menu button {
+    text-align: left; padding: 6px 9px; border: 0; border-radius: 6px; background: none; color: #e6e6e6;
+    font: 13px/1.3 inherit; cursor: pointer; white-space: nowrap;
+  }
+  .tpl-menu button:hover { background: #2b3138; }
+  .tpl-menu .new { color: #8fbaff; border-top: 1px solid #2c3238; border-radius: 0 0 6px 6px; margin-top: 3px; padding-top: 8px; }
   .slot.empty .hint {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 2mm; align-items: center; justify-content: center;
     color: #bbb; font-size: 9pt; text-align: center; padding: 4mm;
   }
   .slot .frame { outline: 0.7mm solid transparent; outline-offset: 2.5mm; transition: outline-color .18s, outline-offset .18s; }
@@ -300,6 +344,8 @@
   body.m-content .credit { visibility: hidden; }
 
   @media print {
+    .zoombar, .tpl-menu, .add-tpl { display: none !important; }
+    .page { zoom: 1 !important; }
     .modal { display: none !important; }
     #splash { display: none; }
     .toast { display: none; }
@@ -351,7 +397,7 @@
         <div><h4>글자 고치기</h4><p>포스트잇을 클릭하면 바로 고칠 수 있습니다. 위쪽 도구줄에서 굵게, 밑줄, 구분선, 크기, 색, 이모티콘을 씁니다.</p></div>
         <div><h4>그리기</h4><p>펜, 직선, 네모, 원을 고르고 드래그합니다. 색, 굵기, 채우기를 고를 수 있고 Shift를 누르면 정사각형과 정원이 됩니다.</p></div>
         <div><h4>사진</h4><p>사진 버튼이나 Ctrl+V로 넣습니다. 사진을 클릭하면 크기, 배치(글자처럼, 배경, 앞), 흐림을 조절하고 배경은 끌어서 옮깁니다.</p></div>
-        <div><h4>템플릿</h4><p>고친 칸은 목록 옆에 노란 점이 생깁니다. 저장하면 "내 템플릿"에 남고, 다른 PC로는 내보내기 → 가져오기.</p></div>
+        <div><h4>템플릿</h4><p>빈 칸의 "+ 템플릿 넣기"로 바로 넣을 수 있습니다. 고친 칸은 목록 옆에 노란 점이 생깁니다. 저장하면 "내 템플릿"에 남고, 다른 PC로는 내보내기 → 가져오기.</p></div>
       </div>
 
       <h4>단축키</h4>
@@ -362,6 +408,7 @@
         <span><kbd>Ctrl</kbd> <kbd>B</kbd> 굵게</span>
         <span><kbd>Ctrl</kbd> <kbd>U</kbd> 밑줄</span>
         <span><kbd>Esc</kbd> 창 닫기, 그리기 끝내기</span>
+        <span><kbd>Ctrl</kbd> + 휠 화면 크게, 작게</span>
       </div>
     </div>
   </div>
@@ -407,7 +454,9 @@
     <div class="status" id="status"></div>
   </div>
 
-  <h2>포스트잇 크기와 위치<span class="h2-sub">단위 mm</span></h2>
+  <details class="sec">
+  <summary><h2>포스트잇 크기와 위치<span class="h2-sub" id="sizeSummary">단위 mm</span></h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary>
+  <div class="sec-body">
   <select class="preset" id="preset"></select>
   <div class="row2 size-acts">
     <button class="small-btn" id="sizeSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>지금 크기 저장</span></button>
@@ -420,13 +469,19 @@
     <label class="num">위쪽 여백<input type="number" id="my" step="1"></label>
     <label class="num">칸 간격<input type="number" id="gap" step="1"></label>
   </div>
+  </div>
+  </details>
 
-  <h2>템플릿 백업<span class="h2-sub">다른 PC로 옮길 때도 사용</span></h2>
+  <details class="sec">
+  <summary><h2>템플릿 백업<span class="h2-sub">다른 PC로 옮길 때도 사용</span></h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary>
+  <div class="sec-body">
   <div class="row2">
     <button class="small-btn" id="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>내보내기</span></button>
     <button class="small-btn" id="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M7 14l5-5 5 5"/><path d="M5 4h14"/></svg><span>가져오기</span></button>
   </div>
   <input type="file" id="importFile" accept=".txt,.js" hidden>
+  </div>
+  </details>
 
   <div class="made"><b>StickyPrint</b><span id="appVer"></span><span class="copy">© 2026 kangjoonhyuk</span></div>
 </aside>
@@ -462,15 +517,18 @@
       <button data-tool="rect" title="네모 (Shift: 정사각형)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg></button>
       <button data-tool="ellipse" title="원 (Shift: 정원)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></button>
       <button data-tool="erase" title="지우개. 그린 도형을 클릭하면 지워집니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9l-5-5a2 2 0 0 1 0-2.8l9-9a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L11 20"/><path d="M8 11l5 5"/></svg></button>
+      <span class="ctx" id="drawOpts">
       <label class="pick" title="그리기 색 (왼쪽 색 동그라미로도 바꿀 수 있음)"><input type="color" id="drawColor" value="#e0362c"></label>
       <select id="drawWidth" title="선 굵기">
         <option value="1">얇게</option><option value="2" selected>보통</option><option value="4">굵게</option><option value="7">아주 굵게</option>
       </select>
       <label class="chk" title="네모와 원의 속을 색으로 채우기"><input type="checkbox" id="drawFill">채우기</label>
+      </span>
     </div>
     <div class="tb-group">
       <button id="imgAdd" title="사진 넣기 (Ctrl+V 로 붙여넣기도 됨)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg> 사진</button>
-      <span class="imgctl" title="사진을 클릭한 뒤 크기 조절">
+      <span class="ctx" id="imgOpts">
+      <span class="imgctl" title="사진 크기">
         <input type="range" id="imgSize" min="10" max="100" step="5" value="50"><span class="val" id="imgSizeVal"></span>
       </span>
       <select id="imgMode" title="사진 배치">
@@ -482,11 +540,18 @@
         흐림 <input type="range" id="imgAlpha" min="10" max="100" step="10" value="100">
       </span>
       <button id="imgDel" title="선택한 사진 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </span>
     </div>
     <input type="file" id="imgFile" accept="image/*" hidden>
   </div>
   <div class="toast" id="toast"></div>
-  <div class="scroll"><div class="page" id="page"></div></div>
+  <div class="scroll" id="scroll"><div class="page" id="page"></div></div>
+  <div class="zoombar" title="화면 크기 (Ctrl + 마우스 휠). 인쇄 크기는 바뀌지 않습니다">
+    <button id="zoomOut" title="작게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
+    <button id="zoomReset" class="zval" title="100%로">100%</button>
+    <button id="zoomIn" title="크게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="zoomFit" title="화면 너비에 맞춤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
 </main>
 
 <script src="data/템플릿.txt"></script>
@@ -679,7 +744,7 @@
         left: cell.x + 'mm', top: cell.y + 'mm', width: state.w + 'mm', height: state.h + 'mm'
       });
       slot.innerHTML = '<div class="frame"></div><div class="no">' + (i + 1) + '</div>'
-        + (tpl ? '' : '<div class="hint">' + (i + 1) + '번 칸<br>왼쪽 목록에서 템플릿 선택</div>');
+        + (tpl ? '' : '<div class="hint"><button class="add-tpl" type="button">+ 템플릿 넣기</button><span>' + (i + 1) + '번 칸</span></div>');
       if (tpl) {
         const paper = document.createElement('div');
         paper.className = 'paper';
@@ -701,6 +766,7 @@
         delete history[i];
       }
       slot.addEventListener('mousedown', () => select(i));
+      if (!tpl) slot.querySelector('.add-tpl').addEventListener('click', e => { e.stopPropagation(); openTplMenu(slot, i); });
       page.appendChild(slot);
 
       const row = document.createElement('div');
@@ -730,6 +796,43 @@
     markSelection();
     renderPanel();
   }
+
+  // 빈 칸 위에 템플릿 목록을 펼친다
+  function openTplMenu(slot, i) {
+    closeTplMenu();
+    const menu = document.createElement('div');
+    menu.className = 'tpl-menu';
+    const add = (label, onPick, cls) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      if (cls) b.className = cls;
+      b.addEventListener('click', e => { e.stopPropagation(); closeTplMenu(); onPick(); });
+      menu.appendChild(b);
+    };
+    const group = (label, list) => {
+      if (!list.length) return;
+      const g = document.createElement('div');
+      g.className = 'grp';
+      g.textContent = label;
+      menu.appendChild(g);
+      list.forEach(t => add(t.name, () => {
+        sel = i;
+        state = { ...state, slots: withSlot(state.slots, i, t.id), drafts: withoutDraft(state.drafts, i) };
+        saveState(); render();
+      }));
+    };
+    group('기본 템플릿', templates.filter(t => inFile(t.id)));
+    group('내 템플릿', templates.filter(t => !inFile(t.id)));
+    add('+ 새 빈 템플릿', () => { sel = i; actNew(); }, 'new');
+    menu.addEventListener('mousedown', e => e.stopPropagation());
+    slot.appendChild(menu);
+  }
+
+  function closeTplMenu() {
+    document.querySelectorAll('.tpl-menu').forEach(m => m.remove());
+  }
+  document.addEventListener('mousedown', e => { if (!e.target.closest('.tpl-menu')) closeTplMenu(); });
 
   function select(i) {
     if (sel === i) return;
@@ -789,6 +892,7 @@
     size.disabled = !imgHere;
     if (imgHere) size.value = parseInt(pickedImg.style.width, 10) || 100;
     document.getElementById('imgSizeVal').textContent = imgHere ? size.value + '%' : '';
+    document.body.classList.toggle('img-picked', imgHere);
     const mode = document.getElementById('imgMode');
     const alpha = document.getElementById('imgAlpha');
     mode.disabled = alpha.disabled = !imgHere;
@@ -830,7 +934,13 @@
     return value[0] === 'c' ? customSizes[+value.slice(1)] : PRESETS[+value];
   }
 
+  function syncSizeSummary() {
+    const el = document.getElementById('sizeSummary');
+    if (el) el.textContent = '지금 ' + state.w + ' × ' + state.h + ' mm';
+  }
+
   function syncPreset() {
+    syncSizeSummary();
     const c = customSizes.findIndex(p => p.w === state.w && p.h === state.h);
     document.getElementById('sizeDelete').disabled = c < 0;
     if (c >= 0) { document.getElementById('preset').value = 'c' + c; return; }
@@ -1576,6 +1686,7 @@
       if (slotTpl(sel)) actSave();
     } else if (e.key === 'Escape') {
       if (helpModal.classList.contains('open')) { closeHelp(); return; }
+      if (document.querySelector('.tpl-menu')) { closeTplMenu(); return; }
       emojiBox.classList.remove('open');
       if (drawTool) setDrawTool(null);
       if (pickedImg) pickImage(null);
@@ -1586,6 +1697,29 @@
   if (window.__TAURI__ && window.__TAURI__.app) {
     window.__TAURI__.app.getVersion().then(v => { document.getElementById('appVer').textContent = ' v' + v; }).catch(() => {});
   }
+
+  // 화면 확대·축소 (CSS zoom: 마우스 좌표 계산은 그대로 맞고, 인쇄할 때는 100%로 되돌린다)
+  const ZOOM_MIN = 0.5, ZOOM_MAX = 2;
+  const pageEl = document.getElementById('page'), scrollEl = document.getElementById('scroll');
+  function setZoom(z) {
+    const v = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)) * 100) / 100;
+    pageEl.style.zoom = v;
+    document.getElementById('zoomReset').textContent = Math.round(v * 100) + '%';
+    state = { ...state, zoom: v };
+    saveState();
+  }
+  const fitZoom = () => (scrollEl.clientWidth - 48) / pageEl.offsetWidth;
+  document.getElementById('zoomOut').addEventListener('click', () => setZoom((state.zoom || 1) - 0.1));
+  document.getElementById('zoomIn').addEventListener('click', () => setZoom((state.zoom || 1) + 0.1));
+  document.getElementById('zoomReset').addEventListener('click', () => setZoom(1));
+  document.getElementById('zoomFit').addEventListener('click', () => setZoom(fitZoom()));
+  scrollEl.addEventListener('wheel', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    setZoom((state.zoom || 1) + (e.deltaY < 0 ? 0.1 : -0.1));
+  }, { passive: false });
+  pageEl.style.zoom = state.zoom || 1;
+  document.getElementById('zoomReset').textContent = Math.round((state.zoom || 1) * 100) + '%';
 
   // 사용법 창: 왼쪽 위 버튼으로 열고, 처음 실행할 때 한 번은 자동으로 연다
   const helpModal = document.getElementById('help');
