@@ -3756,15 +3756,15 @@
     // 획 하나: 길이만큼 사각사각, 점은 콕
     const play = (at, dur, dot) => {
       if (dot) { burst(at, 0.05, { freq: 2600, q: 1.2, gain: 0.9, attack: 0.004, release: 0.035 }); return; }
-      const d = Math.max(dur, 0.04), rise = Math.min(0.02, d / 3), fall = Math.min(0.03, d / 3);
+      const d = Math.max(dur, 0.04), rise = Math.min(0.006, d / 4), fall = Math.min(0.03, d / 3);
       burst(at, d, { freq: 3400 + Math.random() * 800, q: 0.9, gain: 0.3 + Math.random() * 0.08, attack: rise, release: fall, grain: 0.5 });
       burst(at, d, { freq: 1500, q: 1.1, gain: 0.12, attack: rise, release: fall });   // 종이 울림
     };
     // 글씨 그리기와 같은 시계(t0)로 맞춘다. 소리 장치가 늦게 준비돼도 뒤로 밀리지 않고, 이미 지난 획은 건너뛴다
-    const t0 = performance.now(), queue = [];
+    const t0 = performance.now(), queue = [], PEN_LEAD = 0.1;
     const flush = () => {
-      // 스피커까지 걸리는 시간만큼 먼저 내보내 글씨가 적히는 순간에 들리게 한다
-      const passed = (performance.now() - t0) / 1000 + (ctx.outputLatency || ctx.baseLatency || 0);
+      // 스피커까지 걸리는 시간과 PEN_LEAD 만큼 먼저 내보내 글씨가 적히는 순간에 들리게 한다
+      const passed = (performance.now() - t0) / 1000 + (ctx.outputLatency || ctx.baseLatency || 0) + PEN_LEAD;
       queue.splice(0).forEach(([delay, dur, dot]) => {
         const rel = delay - passed;
         if (rel + dur <= 0.02) return;
