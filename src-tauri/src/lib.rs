@@ -31,7 +31,7 @@ fn backup_write(app: tauri::AppHandle, data: String) -> Result<(), String> {
   let dir = data_dir(&app)?;
   let path = dir.join(BACKUP);
   let tmp = dir.join("backup.json.tmp");
-  // 임시 파일에 다 쓴 뒤 바꿔 끼운다 — 쓰다가 꺼져도 기존 백업은 남는다
+  // 임시 파일에 다 쓴 뒤 바꿔 끼운다. 쓰다가 꺼져도 기존 백업은 남는다
   fs::write(&tmp, data).map_err(|e| e.to_string())?;
   if path.exists() {
     let _ = fs::copy(&path, dir.join(BACKUP_PREV));

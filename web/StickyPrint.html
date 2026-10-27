@@ -1403,7 +1403,7 @@
     return svg;
   }
 
-  // 선은 얇아서 정확히 누르기 어렵다 — 누른 곳 주변 몇 px 안의 도형을 찾는다
+  // 선은 얇아서 정확히 누르기 어렵다. 누른 곳 주변 몇 px 안의 도형을 찾는다
   function shapeNear(paper, x, y) {
     for (const d of [0, 3, 6]) {
       for (const [dx, dy] of [[0, 0], [d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, -d], [d, -d], [-d, d]]) {
