@@ -2609,10 +2609,10 @@
     go.focus();
   }
 
-  // 컬러/흑백. 흑백 프린터면 컬러를 막는다 (모르면 둘 다 고를 수 있게)
+  // 컬러/흑백. 처음엔 흑백, 흑백 프린터면 컬러를 막는다 (모르면 둘 다 고를 수 있게)
   let printerIsColor = null, colorAsk = 0;
   function showPrintColor() {
-    const gray = !!state.printGray || printerIsColor === false;
+    const gray = state.printGray !== false || printerIsColor === false;
     document.querySelectorAll('#pdColor button').forEach(b => {
       const on = (b.dataset.gray === '1') === gray;
       b.classList.toggle('on', on);
@@ -2674,7 +2674,7 @@
     try {
       setMode(printMode);   // 찍을 모습(점선만, 내용만)으로 바꾸고 화면에 반영된 뒤 보낸다
       await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)); setTimeout(r, 100); });
-      await window.__TAURI__.core.invoke('print_page', { printer: printer, gray: !!state.printGray || printerIsColor === false });
+      await window.__TAURI__.core.invoke('print_page', { printer: printer, gray: state.printGray !== false || printerIsColor === false });
       if (job !== printJob) return;
       closePrintDialog();
       flash(PRINT_TEXT[printMode].title + '를 프린터로 보냈습니다');
