@@ -14,6 +14,6 @@ const src = '<script src="data/템플릿.txt"></script>';
 if (!html.includes(src)) throw new Error('StickyPrint.html 에서 템플릿 <script> 줄을 찾지 못했습니다');
 writeFileSync(new URL('index.html', dist), html.replace(src, '<script src="data/templates.js"></script>'));
 
+cpSync(new URL('data/', web), new URL('data/', dist), { recursive: true, filter: src => !src.endsWith('템플릿.txt') });
 cpSync(new URL('data/템플릿.txt', web), new URL('data/templates.js', dist));
-cpSync(new URL('data/logo.png', web), new URL('data/logo.png', dist));
 console.log('dist ready');
